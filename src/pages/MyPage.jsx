@@ -2,8 +2,11 @@ import styled from 'styled-components'
 import { IoNotifications } from 'react-icons/io5'
 import { IoNotificationsOutline } from 'react-icons/io5'
 import PageHeader from '../components/PageHeader'
+import { NotificationService } from '../NotificationService'
+import { useNavigate } from 'react-router-dom'
 
 export default function MyPage() {
+  const navigate = useNavigate()
   return (
     <Wrap>
       <PageHeader title="마이 페이지" />
@@ -23,7 +26,7 @@ export default function MyPage() {
         <SectionTitle>활동</SectionTitle>
         <ActivityList>
           <ActivityItem>내가 쓴 글</ActivityItem>
-          <ActivityItem>마음 훈련 기록</ActivityItem>
+          <ActivityItem onClick={()=> navigate('/training-record')}>마음 훈련 기록</ActivityItem>
           <ActivityItem>신청한 활동</ActivityItem>
           <ActivityItem>찜한 활동</ActivityItem>
         </ActivityList>
@@ -52,13 +55,13 @@ export default function MyPage() {
       <Section>
         <SectionTitle>알림 테스트</SectionTitle>
         <TestList>
-          <TestItem>
+          <TestItem onClick={()=> NotificationService.showTestEmotionNotification()}>
             <TestIcon color="#8A79BA">
               <IoNotifications />
             </TestIcon>
             <TestText>감정 기록 알림 테스트</TestText>
           </TestItem>
-          <TestItem>
+          <TestItem onClick={()=> NotificationService.showTestFavoriteNotification()}>
             <TestIcon color="#FF6B35">
               <IoNotificationsOutline />
             </TestIcon>

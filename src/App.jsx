@@ -15,6 +15,7 @@ import WritePost from './pages/WritePost'
 import PostDetail from './pages/PostDetail'
 import ReviewDetail from './pages/ReviewDetail'
 import MoodRecord from './pages/MoodRecord'
+import TrainingRecord from './pages/TrainingRecord'
 
 function App() {
   return (
@@ -34,6 +35,7 @@ function App() {
         <Route path="/post/:id" element={<PostDetail />} />
         <Route path="/review/:id" element={<ReviewDetail />} />
         <Route path="/training" element={<Training />} />
+        <Route path="/training-record" element={<TrainingRecord />} />
         <Route path="/mypage" element={<MyPage />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />

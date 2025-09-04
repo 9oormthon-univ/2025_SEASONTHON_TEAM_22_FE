@@ -4,11 +4,13 @@ import { BrowserRouter } from 'react-router-dom'
 import { GlobalStyles } from './styles/globalstyles.jsx'
 import App from './App.jsx'
 import { registerSW } from 'virtual:pwa-register'
+import { Toaster } from 'sonner'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <BrowserRouter>
       <GlobalStyles />
+      <Toaster richColors />
       <App />
     </BrowserRouter>
   </StrictMode>,
