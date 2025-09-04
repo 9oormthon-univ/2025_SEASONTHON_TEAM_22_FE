@@ -2,7 +2,7 @@ import styled from 'styled-components'
 import { IoNotifications } from 'react-icons/io5'
 import { IoNotificationsOutline } from 'react-icons/io5'
 import PageHeader from '../components/PageHeader'
-import { NotificationService } from '../NotificationService'
+import { NotificationService } from '../NotificationService.jsx'
 import { useNavigate } from 'react-router-dom'
 
 export default function MyPage() {
