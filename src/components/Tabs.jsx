@@ -9,6 +9,7 @@ export default function Tabs({ tabs = [], activeValue, onChange }) {
             <Button
               key={tab.value || tab.label}
               active={(tab.value || tab.label) === activeValue}
+              label={tab.label}
               onClick={() => onChange?.(tab.value || tab.label)}
               type="button"
             >
@@ -56,13 +57,34 @@ const Button = styled.button`
   padding: 0.8rem 1.2rem;
   border-radius: 0.8rem;
   border: none;
-  background: ${p => p.active ? 'var(--primary)' : 'transparent'};
-  color: ${p => p.active ? 'var(--primary-foreground)' : 'var(--muted-foreground)'};
+  background: ${p => {
+    if (p.active) {
+      // "함께하기" 탭은 원래 primary 색상 사용
+      return p.label === '함께하기' ? 'var(--primary)' : '#ffffff'
+    }
+    return 'transparent'
+  }};
+  color: ${p => {
+    if (p.active) {
+      // "함께하기" 탭은 원래 primary-foreground 색상 사용
+      return p.label === '함께하기' ? 'var(--primary-foreground)' : 'var(--primary)'
+    }
+    return 'var(--muted-foreground)'
+  }};
   font-size: 1.5rem;
   font-weight: var(--font-weight-medium);
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: ${p => p.active ? '0 2px 0 rgba(0,0,0,0.12)' : 'none'};
+  box-shadow: ${p => p.active ? '0 2px 8px rgba(0,0,0,0.1)' : 'none'};
+  
+  &:hover {
+    background: ${p => {
+      if (p.active) {
+        return p.label === '함께하기' ? 'var(--primary)' : '#ffffff'
+      }
+      return 'rgba(255,255,255,0.5)'
+    }};
+  }
 `
 
 

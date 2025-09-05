@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect } from 'react'
+import { authService } from '../services/memberService'
 
 const AuthContext = createContext()
 
@@ -36,11 +37,55 @@ export const AuthProvider = ({ children }) => {
     setIsAuthenticated(true)
   }
 
-  const logout = () => {
-    localStorage.removeItem('currentUser')
-    localStorage.removeItem('accessToken')
-    setCurrentUser(null)
-    setIsAuthenticated(false)
+  const logout = async () => {
+    try {
+      // 서버에 로그아웃 요청
+      await authService.logout()
+    } catch (error) {
+      console.error('로그아웃 API 호출 실패:', error)
+      // API 호출이 실패해도 로컬 로그아웃은 진행
+    } finally {
+      // 로컬 스토리지 정리
+      localStorage.removeItem('currentUser')
+      localStorage.removeItem('accessToken')
+      setCurrentUser(null)
+      setIsAuthenticated(false)
+    }
+  }
+
+  // 토큰 갱신 함수
+  const refreshToken = async () => {
+    try {
+      const response = await authService.refresh()
+      if (response.success && response.data) {
+        // 새로운 토큰을 localStorage에 저장
+        localStorage.setItem('accessToken', response.data)
+        return true
+      }
+      return false
+    } catch (error) {
+      console.error('토큰 갱신 실패:', error)
+      // 토큰 갱신 실패 시 로그아웃
+      logout()
+      return false
+    }
+  }
+
+  // 구글 로그인 콜백 처리 함수
+  const handleGoogleLoginCallback = async () => {
+    try {
+      const response = await authService.googleLogin()
+      if (response.success && response.data) {
+        // 구글 로그인 성공 시 사용자 정보와 토큰 저장
+        const { member, accessToken } = response.data
+        login(member, accessToken)
+        return { success: true, user: member }
+      }
+      return { success: false, error: '구글 로그인에 실패했습니다.' }
+    } catch (error) {
+      console.error('구글 로그인 콜백 처리 실패:', error)
+      return { success: false, error: error.message }
+    }
   }
 
   const value = {
@@ -48,7 +93,9 @@ export const AuthProvider = ({ children }) => {
     currentUser,
     isLoading,
     login,
-    logout
+    logout,
+    refreshToken,
+    handleGoogleLoginCallback
   }
 
   return (

@@ -25,6 +25,15 @@ export default function MyPage() {
   const [trainingProgress, setTrainingProgress] = useState(null)
   const [myComments, setMyComments] = useState([])
   
+  // 알림 설정 상태 (localStorage에서 불러오기)
+  const [notificationSettings, setNotificationSettings] = useState(() => {
+    const saved = localStorage.getItem('notification-settings')
+    return saved ? JSON.parse(saved) : {
+      emotionRecord: true,
+      favoriteActivity: true
+    }
+  })
+  
   // 사용자 정보 조회
   useEffect(() => {
     const fetchUserInfo = async () => {
@@ -108,8 +117,8 @@ export default function MyPage() {
     setShowLogoutModal(true)
   }
   
-  const confirmLogout = () => {
-    logout()
+  const confirmLogout = async () => {
+    await logout()
     toast.success('로그아웃 되었습니다.')
     navigate('/login')
   }
@@ -132,6 +141,19 @@ export default function MyPage() {
   const cancelDeleteAccount = () => {
     setShowDeleteModal(false)
   }
+  
+  // 알림 설정 토글 함수
+  const toggleNotification = (type) => {
+    setNotificationSettings(prev => {
+      const newSettings = {
+        ...prev,
+        [type]: !prev[type]
+      }
+      // localStorage에 저장
+      localStorage.setItem('notification-settings', JSON.stringify(newSettings))
+      return newSettings
+    })
+  }
 
   return (
     <Wrap>
@@ -151,10 +173,9 @@ export default function MyPage() {
       <Section>
         <SectionTitle>활동</SectionTitle>
         <ActivityList>
-          <ActivityItem>
+          <ActivityItem onClick={() => navigate('/my-posts')}>
             <ActivityItemContent>
-              <span>내가 쓴 댓글</span>
-              <ActivityProgress>{myComments.length}개</ActivityProgress>
+              <span>내가 쓴 글</span>
             </ActivityItemContent>
           </ActivityItem>
           <ActivityItem onClick={()=> navigate('/training-record')}>
@@ -167,8 +188,8 @@ export default function MyPage() {
               )}
             </ActivityItemContent>
           </ActivityItem>
-          <ActivityItem>신청한 활동</ActivityItem>
-          <ActivityItem>찜한 활동</ActivityItem>
+          <ActivityItem onClick={() => navigate('/applications')}>신청한 활동</ActivityItem>
+          <ActivityItem onClick={() => navigate('/favorites')}>찜한 활동</ActivityItem>
         </ActivityList>
       </Section>
 
@@ -180,14 +201,20 @@ export default function MyPage() {
               <AlertTitle>감정 기록 알림</AlertTitle>
               <AlertDesc>매일 저녁에 감정 기록 알림을 드려요</AlertDesc>
             </AlertInfo>
-            <ToggleSwitch $active={true} />
+            <ToggleSwitch 
+              $active={notificationSettings.emotionRecord} 
+              onClick={() => toggleNotification('emotionRecord')}
+            />
           </AlertItem>
           <AlertItem>
             <AlertInfo>
               <AlertTitle>찜한 활동 알림</AlertTitle>
               <AlertDesc>찜한 활동의 신청이 마감되기 전에 알려드려요</AlertDesc>
             </AlertInfo>
-            <ToggleSwitch $active={true} />
+            <ToggleSwitch 
+              $active={notificationSettings.favoriteActivity} 
+              onClick={() => toggleNotification('favoriteActivity')}
+            />
           </AlertItem>
         </AlertList>
       </Section>
@@ -460,6 +487,11 @@ const ToggleSwitch = styled.div`
   border-radius: 1.2rem;
   position: relative;
   cursor: pointer;
+  transition: background-color 0.2s ease;
+  
+  &:hover {
+    background: ${props => props.$active ? 'var(--primary-hover, #6B5A9E)' : 'var(--muted-hover, #E5E5E5)'};
+  }
   
   &::after {
     content: '';
@@ -471,6 +503,7 @@ const ToggleSwitch = styled.div`
     background: white;
     border-radius: 50%;
     transition: left 0.2s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   }
 `
 

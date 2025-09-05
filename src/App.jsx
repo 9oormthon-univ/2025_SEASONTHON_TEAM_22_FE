@@ -20,6 +20,10 @@ import MoodRecord from './pages/MoodRecord'
 import TrainingRecord from './pages/TrainingRecord'
 import TrainingDetail from './pages/TrainingDetail'
 import ActivityCompletion from './pages/ActivityCompletion'
+import MyPosts from './pages/MyPosts'
+import Favorites from './pages/Favorites'
+import Applications from './pages/Applications'
+import GoogleCallback from './pages/GoogleCallback'
 
 function AppRoutes() {
   const { isAuthenticated, isLoading } = useAuth()
@@ -55,6 +59,10 @@ function AppRoutes() {
         element={isAuthenticated ? <Navigate to="/" replace /> : <Signup />} 
       />
       <Route 
+        path="/auth/google/callback" 
+        element={<GoogleCallback />} 
+      />
+      <Route 
         element={isAuthenticated ? <AppLayout /> : <Navigate to="/login" replace />}
       >
         <Route path="/" element={<Home />} />
@@ -74,6 +82,9 @@ function AppRoutes() {
         <Route path="/training-detail" element={<TrainingDetail />} />
         <Route path="/activity-completion" element={<ActivityCompletion />} />
         <Route path="/mypage" element={<MyPage />} />
+        <Route path="/my-posts" element={<MyPosts />} />
+        <Route path="/favorites" element={<Favorites />} />
+        <Route path="/applications" element={<Applications />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

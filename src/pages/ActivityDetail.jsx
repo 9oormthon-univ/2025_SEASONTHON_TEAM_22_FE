@@ -4,12 +4,16 @@ import styled from 'styled-components'
 import PageHeader from '../components/PageHeader'
 import { Users, BookOpen, MapPin, Calendar, Clock } from 'lucide-react'
 import { getActivity } from '../services/emotionService'
+import useApplicationsStore from '../stores/applicationsStore'
 
 export default function ActivityDetail() {
   const { id } = useParams()
   const [activity, setActivity] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  
+  // 신청한 활동 스토어
+  const { applyActivity, isApplied } = useApplicationsStore()
 
   useEffect(() => {
     const fetchActivity = async () => {
@@ -60,12 +64,27 @@ export default function ActivityDetail() {
     )
   }
 
-  const handleApply = () => {
-    window.open(
-      'https://docs.google.com/forms/d/1hlkND-OMIie_-rsW9jwW3cjNG-6OcjCXzjdBXjR7oQI/viewform?edit_requested=true',
-      '_blank',
-      'noopener,noreferrer'
-    )
+  const handleApply = async () => {
+    if (activity) {
+      // 활동 데이터를 applicationsStore 형식에 맞게 변환
+      const activityData = {
+        id: activity.id,
+        title: activity.title,
+        category: '함께하기',
+        image: 'https://images.unsplash.com/photo-1581287053822-fd7bf4f4bfec?auto=format&fit=crop&w=800&q=60',
+        description: activity.content || '활동 설명',
+        duration: '매주 화요일',
+        timeRange: '10:00~12:00',
+        difficulty: '만19세~만39세',
+        location: activity.location || '서울시 강남구',
+        maxParticipants: 20,
+        currentParticipants: 15,
+        date: new Date(activity.applyStartAt).toLocaleDateString('ko-KR'),
+        time: '10:00'
+      }
+      
+      await applyActivity(activityData)
+    }
   }
 
   return (
@@ -107,10 +126,11 @@ export default function ActivityDetail() {
       </Section>
 
       <ApplyButton
-        disabled={activity.status === 'closed'}
+        disabled={activity.recruitStatus === 'CLOSED' || isApplied(activity.id)}
         onClick={handleApply}
       >
-        {activity.status === 'closed' ? '마감' : '신청하기'}
+        {activity.recruitStatus === 'CLOSED' ? '마감' : 
+         isApplied(activity.id) ? '신청 완료' : '신청하기'}
       </ApplyButton>
     </Wrap>
   )

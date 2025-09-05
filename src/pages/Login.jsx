@@ -55,8 +55,9 @@ export default function Login() {
   }
 
   const handleGoogleLogin = () => {
-    // 구글 로그인 로직 (추후 구현)
-    toast.info('구글 로그인은 추후 구현될 예정입니다.')
+    // 구글 OAuth2 인증 페이지로 리다이렉트
+    // 백엔드에서 성공 시 http://localhost:5173/auth/google/callback?success=true&accessToken=...&memberId=... 로 리다이렉트
+    window.location.href = 'https://slowmind.ngrok.app/oauth2/authorization/google'
   }
 
   const handleDevLogin = () => {

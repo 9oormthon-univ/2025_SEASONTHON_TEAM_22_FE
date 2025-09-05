@@ -1,21 +1,45 @@
 import styled from 'styled-components'
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { TreePine, Compass } from 'lucide-react'
+import { TreePine, Compass, User, LogOut } from 'lucide-react'
 import { createEmotion } from '../services/emotionService'
+import { useAuth } from '../contexts/AuthContext'
 
 export default function Home() {
   const navigate = useNavigate()
+  const { currentUser, logout } = useAuth()
   const [selectedMood, setSelectedMood] = useState(null)
   const [showJournalInput, setShowJournalInput] = useState(false)
   const [journalText, setJournalText] = useState('')
   const [isSaving, setIsSaving] = useState(false)
+  const [showProfileMenu, setShowProfileMenu] = useState(false)
+  const profileMenuRef = useRef(null)
   const moodEmoji = { '행복': '😊', '보통': '🙂', '슬픔': '😢', '화남': '😠', '걱정': '😟' }
 
   const handleMoodSelect = (label) => {
     setSelectedMood(label)
     setShowJournalInput(true)
   }
+
+  const handleLogout = () => {
+    logout()
+    navigate('/login')
+    setShowProfileMenu(false)
+  }
+
+  // 외부 클릭 시 메뉴 닫기
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (profileMenuRef.current && !profileMenuRef.current.contains(event.target)) {
+        setShowProfileMenu(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [])
 
   const handleSaveJournal = async () => {
     if (!selectedMood || !journalText.trim()) return
@@ -76,6 +100,31 @@ export default function Home() {
   }
   return (
     <Wrap>
+      {/* Profile Menu */}
+      {currentUser && (
+        <ProfileMenuContainer ref={profileMenuRef}>
+          <ProfileButton
+            onClick={() => setShowProfileMenu(!showProfileMenu)}
+          >
+            <User size={18} />
+          </ProfileButton>
+          
+          {showProfileMenu && (
+            <ProfileDropdown>
+              <ProfileInfo>
+                <ProfileName>{currentUser.nickname || '사용자'}</ProfileName>
+                <ProfileStatus>감정 기록 여행 중</ProfileStatus>
+              </ProfileInfo>
+              <ProfileDivider />
+              <ProfileMenuItem onClick={handleLogout}>
+                <LogOut size={16} />
+                <span>로그아웃</span>
+              </ProfileMenuItem>
+            </ProfileDropdown>
+          )}
+        </ProfileMenuContainer>
+      )}
+
       <GreetingSection>
         <Heading>안녕하세요, 사용자님! 👋</Heading>
         <Sub>오늘 하루는 어떠셨나요?</Sub>
@@ -498,6 +547,88 @@ const SummaryEmoji = styled.span`
 
 const SummaryMoodText = styled.span`
   color: var(--foreground);
+`
+
+// Profile Menu Styles
+const ProfileMenuContainer = styled.div`
+  position: fixed;
+  top: 4.5rem;
+  right: 3rem;
+  z-index: 1000;
+`
+
+const ProfileButton = styled.button`
+  width: 4rem;
+  height: 4rem;
+  background: white;
+  border: 2px solid #E0D9F0;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: #8A79BA;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  
+  &:hover {
+    background: #F8F8F8;
+    border-color: #D0C9E0;
+  }
+`
+
+const ProfileDropdown = styled.div`
+  position: absolute;
+  right: 0;
+  top: 4.8rem;
+  width: 19.2rem;
+  background: white;
+  border: 2px solid #E0D9F0;
+  border-radius: 1.2rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  overflow: hidden;
+`
+
+const ProfileInfo = styled.div`
+  padding: 1.2rem;
+  border-bottom: 1px solid #E0D9F0;
+`
+
+const ProfileName = styled.p`
+  margin: 0 0 0.4rem 0;
+  font-weight: 500;
+  color: #333333;
+  font-size: 1.4rem;
+`
+
+const ProfileStatus = styled.p`
+  margin: 0;
+  font-size: 1.2rem;
+  color: #666666;
+`
+
+const ProfileDivider = styled.div`
+  height: 1px;
+  background: #E0D9F0;
+`
+
+const ProfileMenuItem = styled.button`
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+  padding: 1.2rem;
+  background: transparent;
+  border: none;
+  color: #333333;
+  font-size: 1.4rem;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  
+  &:hover {
+    background: #F8F8F8;
+  }
 `
 
 

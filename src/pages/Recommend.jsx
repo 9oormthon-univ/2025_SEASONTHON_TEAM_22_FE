@@ -5,15 +5,17 @@ import Tabs from '../components/Tabs'
 import { IoLocationOutline, IoTimeOutline, IoPersonOutline } from 'react-icons/io5'
 import { useNavigate } from 'react-router-dom'
 import { Compass, TreePine, BookOpen, Headphones, Target, Gamepad2, Cloud, Smile, Zap, Meh, Angry, Frown, Heart, MessageCircle } from 'lucide-react'
-import { likeActivity, unlikeActivity, getActivities } from '../services/emotionService'
-import { toast } from 'sonner'
+import { getActivities } from '../services/emotionService'
+import useFavoritesStore from '../stores/favoritesStore'
 
 export default function Recommend() {
   const [activeTab, setActiveTab] = useState('alone')
-  const [favoriteActivities, setFavoriteActivities] = useState([])
   const [groupActivities, setGroupActivities] = useState([])
   const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
+  
+  // Zustand 스토어에서 찜하기 관련 함수들 가져오기
+  const { favoriteActivities, toggleFavorite, isFavorite } = useFavoritesStore()
 
   // 카테고리별 아이콘/색상 매핑
   const CATEGORY_META = {
@@ -168,41 +170,10 @@ export default function Recommend() {
     '자신감UP! 관계소통UP! 마음 성장 보드게임': 3
   }
 
-  // 찜하기 상태 확인 함수
-  const isFavorite = (activityId) => {
-    return favoriteActivities.some(fav => fav.id === activityId)
-  }
-
-  // 찜하기 토글 함수
+  // 찜하기 토글 함수 (Zustand 스토어 사용)
   const handleFavoriteToggle = async (activity, e) => {
     e.stopPropagation() // 카드 클릭 이벤트 방지
-    
-    try {
-      if (isFavorite(activity.id)) {
-        // 찜 해제
-        await unlikeActivity(activity.id)
-        setFavoriteActivities(prev => prev.filter(fav => fav.id !== activity.id))
-        toast.success('찜을 해제했습니다')
-      } else {
-        // 찜하기
-        await likeActivity(activity.id)
-        setFavoriteActivities(prev => [...prev, {
-          id: activity.id,
-          title: activity.title,
-          category: activity.category
-        }])
-        toast.success('활동을 찜했습니다!')
-      }
-    } catch (error) {
-      console.error('찜하기 실패:', error)
-      if (error.message.includes('이미 찜한')) {
-        toast.info('이미 찜한 활동입니다.')
-      } else if (error.message.includes('찜하지 않은')) {
-        toast.info('찜하지 않은 활동입니다.')
-      } else {
-        toast.error('찜하기에 실패했습니다.')
-      }
-    }
+    await toggleFavorite(activity)
   }
 
   // 후기 보기 함수

@@ -1,4 +1,4 @@
-const API_BASE_URL = 'http://localhost:8080/api/v1';
+const API_BASE_URL = 'http://slowmind.ngrok.app/api/v1';
 
 // 감정 기록 목록 조회
 export const getEmotions = async (pageable = { page: 0, size: 10, sort: ['createdAt,desc'] }) => {
@@ -406,7 +406,7 @@ export const applyActivity = async (id) => {
 };
 
 // 활동 신청 취소
-export const cancelActivityApplication = async (id) => {
+export const cancelActivity = async (id) => {
   try {
     const response = await fetch(`${API_BASE_URL}/activities/${id}/apply`, {
       method: 'DELETE',
@@ -435,6 +435,7 @@ export const cancelActivityApplication = async (id) => {
     throw error;
   }
 };
+
 
 // ===== 게시글 관련 API =====
 

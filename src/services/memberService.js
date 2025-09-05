@@ -1,4 +1,4 @@
-const API_BASE_URL = 'http://localhost:8080/api/v1'
+const API_BASE_URL = 'http://slowmind.ngrok.app/api/v1'
 
 // API 요청 헬퍼 함수
 const apiRequest = async (url, options = {}) => {
@@ -15,6 +15,48 @@ const apiRequest = async (url, options = {}) => {
 
   try {
     const response = await fetch(`${API_BASE_URL}${url}`, config)
+    
+    // 401 에러 시 토큰 갱신 시도
+    if (response.status === 401 && token) {
+      try {
+        const refreshResponse = await fetch(`${API_BASE_URL}/auth/refresh`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+        })
+        
+        if (refreshResponse.ok) {
+          const refreshData = await refreshResponse.json()
+          if (refreshData.success && refreshData.data) {
+            // 새로운 토큰으로 재시도
+            localStorage.setItem('accessToken', refreshData.data)
+            const retryConfig = {
+              ...config,
+              headers: {
+                ...config.headers,
+                Authorization: `Bearer ${refreshData.data}`,
+              },
+            }
+            
+            const retryResponse = await fetch(`${API_BASE_URL}${url}`, retryConfig)
+            if (!retryResponse.ok) {
+              const errorData = await retryResponse.json().catch(() => ({}))
+              throw new Error(errorData.message || `HTTP error! status: ${retryResponse.status}`)
+            }
+            return await retryResponse.json()
+          }
+        }
+      } catch (refreshError) {
+        console.error('토큰 갱신 실패:', refreshError)
+        // 토큰 갱신 실패 시 로그아웃 처리
+        localStorage.removeItem('accessToken')
+        localStorage.removeItem('currentUser')
+        window.location.href = '/login'
+        throw new Error('인증이 만료되었습니다. 다시 로그인해주세요.')
+      }
+    }
     
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}))
@@ -56,6 +98,30 @@ export const memberService = {
     return apiRequest('/members/login', {
       method: 'POST',
       body: JSON.stringify(data),
+    })
+  },
+}
+
+// Auth API 서비스
+export const authService = {
+  // 토큰 갱신
+  refresh: async () => {
+    return apiRequest('/auth/refresh', {
+      method: 'GET',
+    })
+  },
+
+  // 로그아웃
+  logout: async () => {
+    return apiRequest('/auth/logout', {
+      method: 'GET',
+    })
+  },
+
+  // 구글 로그인 (OAuth2 콜백 처리용)
+  googleLogin: async () => {
+    return apiRequest('/auth/login/google', {
+      method: 'GET',
     })
   },
 }
