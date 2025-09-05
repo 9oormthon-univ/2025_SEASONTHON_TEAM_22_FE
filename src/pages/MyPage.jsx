@@ -1,12 +1,101 @@
 import styled from 'styled-components'
 import { IoNotifications } from 'react-icons/io5'
 import { IoNotificationsOutline } from 'react-icons/io5'
+import { X, User } from 'lucide-react'
 import PageHeader from '../components/PageHeader'
 import { NotificationService } from '../NotificationService.jsx'
 import { useNavigate } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { toast } from 'sonner'
+import { useAuth } from '../contexts/AuthContext'
+import { memberService } from '../services/memberService'
 
 export default function MyPage() {
   const navigate = useNavigate()
+  const { currentUser, logout } = useAuth()
+  
+  // Modal states
+  const [showEditModal, setShowEditModal] = useState(false)
+  const [showLogoutModal, setShowLogoutModal] = useState(false)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  
+  // Edit profile states
+  const [tempNickname, setTempNickname] = useState(currentUser?.nickname || '사용자')
+  const [userInfo, setUserInfo] = useState(null)
+  
+  // 사용자 정보 조회
+  useEffect(() => {
+    const fetchUserInfo = async () => {
+      try {
+        const info = await memberService.getMyInfo()
+        setUserInfo(info)
+      } catch (error) {
+        console.error('사용자 정보 조회 실패:', error)
+      }
+    }
+    
+    if (currentUser) {
+      fetchUserInfo()
+    }
+  }, [currentUser])
+
+  const handleEditProfile = () => {
+    setTempNickname(userInfo?.nickname || currentUser?.nickname || '사용자')
+    setShowEditModal(true)
+  }
+  
+  const handleSaveProfile = async () => {
+    try {
+      await memberService.updateMyInfo({
+        nickname: tempNickname,
+        profileImageUrl: userInfo?.profileImageUrl || null
+      })
+      
+      // 사용자 정보 다시 조회
+      const updatedInfo = await memberService.getMyInfo()
+      setUserInfo(updatedInfo)
+      
+      toast.success('프로필이 수정되었습니다.')
+      setShowEditModal(false)
+    } catch (error) {
+      console.error('프로필 수정 실패:', error)
+      toast.error('프로필 수정에 실패했습니다.')
+    }
+  }
+  
+  const handleCancelEdit = () => {
+    setShowEditModal(false)
+  }
+  
+  const handleLogoutClick = () => {
+    setShowLogoutModal(true)
+  }
+  
+  const confirmLogout = () => {
+    logout()
+    toast.success('로그아웃 되었습니다.')
+    navigate('/login')
+  }
+  
+  const cancelLogout = () => {
+    setShowLogoutModal(false)
+  }
+  
+  const handleDeleteAccountClick = () => {
+    setShowDeleteModal(true)
+  }
+  
+  const confirmDeleteAccount = () => {
+    // 실제로는 API 호출로 계정 삭제
+    logout()
+    toast.success('계정이 삭제되었습니다.')
+    navigate('/login')
+  }
+  
+  const cancelDeleteAccount = () => {
+    setShowDeleteModal(false)
+  }
+
   return (
     <Wrap>
       <PageHeader title="마이 페이지" />
@@ -15,11 +104,11 @@ export default function MyPage() {
         <ProfileLeft>
           <ProfileIcon>👤</ProfileIcon>
           <ProfileInfo>
-            <ProfileName>사용자</ProfileName>
-            <ProfileEmail>123@gmail.com</ProfileEmail>
+            <ProfileName>{userInfo?.nickname || currentUser?.nickname || '사용자'}</ProfileName>
+            <ProfileEmail>{userInfo?.email || currentUser?.email || '123@gmail.com'}</ProfileEmail>
           </ProfileInfo>
         </ProfileLeft>
-        <EditButton>내 정보 수정</EditButton>
+        <EditButton onClick={handleEditProfile}>내 정보 수정</EditButton>
       </ProfileCard>
 
       <Section>
@@ -71,9 +160,105 @@ export default function MyPage() {
       </Section>
 
       <BottomOptions>
-        <LogoutButton>로그아웃</LogoutButton>
-        <WithdrawalButton>회원 탈퇴</WithdrawalButton>
+        <LogoutButton onClick={handleLogoutClick}>로그아웃</LogoutButton>
+        <WithdrawalButton onClick={handleDeleteAccountClick}>회원 탈퇴</WithdrawalButton>
       </BottomOptions>
+
+      {/* Edit Profile Modal */}
+      {showEditModal && (
+        <ModalOverlay>
+          <ModalContainer>
+            {/* Modal Header */}
+            <ModalHeader>
+              <ModalTitle>내정보수정</ModalTitle>
+              <CloseButton onClick={handleCancelEdit}>
+                <X size={20} />
+              </CloseButton>
+            </ModalHeader>
+
+            {/* Profile Photo Section */}
+            <ProfilePhotoSection>
+              <ProfilePhotoContainer>
+                <User size={32} />
+              </ProfilePhotoContainer>
+              <PhotoEditButton>사진 수정</PhotoEditButton>
+            </ProfilePhotoSection>
+
+            {/* Nickname Input */}
+            <InputSection>
+              <InputLabel>닉네임</InputLabel>
+              <ModalInput
+                value={tempNickname}
+                onChange={(e) => setTempNickname(e.target.value)}
+                placeholder="닉네임을 입력하세요"
+              />
+            </InputSection>
+
+            {/* Save Button */}
+            <SaveButton onClick={handleSaveProfile}>
+              저장
+            </SaveButton>
+          </ModalContainer>
+        </ModalOverlay>
+      )}
+
+      {/* Logout Confirmation Modal */}
+      {showLogoutModal && (
+        <ModalOverlay>
+          <ModalContainer>
+            {/* Close Button */}
+            <ModalCloseButton>
+              <CloseButton onClick={cancelLogout}>
+                <X size={24} />
+              </CloseButton>
+            </ModalCloseButton>
+
+            {/* Modal Content */}
+            <ModalContent>
+              <ModalMessage>로그아웃 하시겠습니까?</ModalMessage>
+
+              {/* Action Buttons */}
+              <ActionButtons>
+                <ActionButton onClick={cancelLogout}>
+                  취소
+                </ActionButton>
+                <ActionButton onClick={confirmLogout}>
+                  로그아웃
+                </ActionButton>
+              </ActionButtons>
+            </ModalContent>
+          </ModalContainer>
+        </ModalOverlay>
+      )}
+
+      {/* Delete Account Confirmation Modal */}
+      {showDeleteModal && (
+        <ModalOverlay>
+          <ModalContainer>
+            {/* Close Button */}
+            <ModalCloseButton>
+              <CloseButton onClick={cancelDeleteAccount}>
+                <X size={24} />
+              </CloseButton>
+            </ModalCloseButton>
+
+            {/* Modal Content */}
+            <ModalContent>
+              <ModalMessage>탈퇴하시겠습니까?</ModalMessage>
+
+              {/* Action Buttons */}
+              <ActionButtons>
+                <ActionButton onClick={cancelDeleteAccount}>
+                  취소
+                </ActionButton>
+                <ActionButton onClick={confirmDeleteAccount}>
+                  탈퇴
+                </ActionButton>
+              </ActionButtons>
+            </ModalContent>
+          </ModalContainer>
+        </ModalOverlay>
+      )}
     </Wrap>
   )
 }
@@ -274,4 +459,176 @@ const WithdrawalButton = styled.button`
   font-size: 1.6rem;
   text-align: left;
   padding: 0.8rem 0;
+`
+
+// Modal Styles
+const ModalOverlay = styled.div`
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+  padding: 1.6rem;
+`
+
+const ModalContainer = styled.div`
+  background: white;
+  border-radius: 1.6rem;
+  width: 100%;
+  max-width: 24rem;
+  margin: 0 auto;
+  position: relative;
+  padding: 2.4rem;
+`
+
+const ModalHeader = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 2.4rem;
+`
+
+const ModalTitle = styled.h2`
+  font-weight: 500;
+  color: #333333;
+  margin: 0;
+  font-size: 1.8rem;
+`
+
+const CloseButton = styled.button`
+  padding: 0.4rem;
+  color: #333333;
+  background: none;
+  border: none;
+  border-radius: 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  
+  &:hover {
+    background: #f5f5f5;
+  }
+`
+
+const ProfilePhotoSection = styled.div`
+  text-align: center;
+  margin-bottom: 2.4rem;
+`
+
+const ProfilePhotoContainer = styled.div`
+  width: 8rem;
+  height: 8rem;
+  background: #F2F2FC;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #E0D9F0;
+  margin: 0 auto 1.6rem;
+  color: #8A79BA;
+`
+
+const PhotoEditButton = styled.button`
+  background: none;
+  border: none;
+  color: #333333;
+  font-size: 1.4rem;
+  cursor: pointer;
+  transition: color 0.2s;
+  
+  &:hover {
+    color: #8A79BA;
+  }
+`
+
+const InputSection = styled.div`
+  margin-bottom: 2.4rem;
+`
+
+const InputLabel = styled.label`
+  display: block;
+  font-size: 1.4rem;
+  font-weight: 500;
+  color: #333333;
+  margin-bottom: 0.8rem;
+`
+
+const ModalInput = styled.input`
+  width: 100%;
+  border: 1px solid #E0D9F0;
+  border-radius: 0.8rem;
+  padding: 1.2rem;
+  font-size: 1.4rem;
+  color: #333333;
+  
+  &:focus {
+    outline: none;
+    border-color: #8A79BA;
+  }
+  
+  &::placeholder {
+    color: #AAAAAA;
+  }
+`
+
+const SaveButton = styled.button`
+  width: 100%;
+  background: #8A79BA;
+  color: white;
+  border: none;
+  border-radius: 0.8rem;
+  padding: 1.2rem;
+  font-size: 1.6rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  
+  &:hover {
+    background: #6B5A9E;
+  }
+`
+
+const ModalCloseButton = styled.div`
+  display: flex;
+  justify-content: flex-end;
+  padding: 1.6rem 1.6rem 0 0;
+`
+
+const ModalContent = styled.div`
+  padding: 0 2.4rem 2.4rem;
+`
+
+const ModalMessage = styled.h2`
+  text-align: center;
+  font-size: 1.8rem;
+  font-weight: 500;
+  color: #333333;
+  margin: 0 0 3.2rem 0;
+`
+
+const ActionButtons = styled.div`
+  display: flex;
+`
+
+const ActionButton = styled.button`
+  flex: 1;
+  padding: 1.6rem;
+  color: #333333;
+  font-weight: 500;
+  border-top: 1px solid #E0D9F0;
+  background: none;
+  border-bottom: none;
+  border-left: none;
+  border-right: none;
+  cursor: pointer;
+  transition: background 0.2s;
+  
+  &:first-child {
+    border-right: 1px solid #E0D9F0;
+  }
+  
+  &:hover {
+    background: #F2F2FC;
+  }
 `

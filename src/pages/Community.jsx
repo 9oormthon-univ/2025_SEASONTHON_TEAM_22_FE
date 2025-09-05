@@ -5,6 +5,8 @@ import { useEffect } from 'react'
 import Tabs from '../components/Tabs'
 import { useState } from 'react'
 import { Heart as HeartIcon } from 'lucide-react'
+import { getPosts, likePost, unlikePost } from '../services/emotionService'
+import { toast } from 'sonner'
 
 export default function Community() {
   const navigate = useNavigate()
@@ -20,8 +22,30 @@ export default function Community() {
     { id: 3, title: '청년 D.I.Y 자조모임', subtitle: '미르미3', rating: 4, timeAgo: '2024-05-27', content: '똑똑아라 힘들었어요. 할 편 너희랑 그래도 결원 할 수 있었죠.' }
   ])
 
-  const toggleLike = (id) => {
-    setPosts(prev => prev.map(p => p.id === id ? { ...p, isLiked: !p.isLiked } : p))
+  const toggleLike = async (id, e) => {
+    e.stopPropagation() // 카드 클릭 이벤트 방지
+    
+    try {
+      const post = posts.find(p => p.id === id)
+      if (!post) return
+      
+      if (post.isLiked) {
+        await unlikePost(id)
+        setPosts(prev => prev.map(p => 
+          p.id === id ? { ...p, isLiked: false, likes: Math.max(0, (p.likes || 0) - 1) } : p
+        ))
+        toast.success('좋아요를 취소했습니다.')
+      } else {
+        await likePost(id)
+        setPosts(prev => prev.map(p => 
+          p.id === id ? { ...p, isLiked: true, likes: (p.likes || 0) + 1 } : p
+        ))
+        toast.success('좋아요를 눌렀습니다!')
+      }
+    } catch (error) {
+      console.error('좋아요 처리 실패:', error)
+      toast.error(`좋아요 처리 실패: ${error.message}`)
+    }
   }
 
   const renderStars = (rating) => {
@@ -32,22 +56,51 @@ export default function Community() {
     return arr.join(' ')
   }
 
-  // 로컬 저장소의 작성된 글/후기 반영
+  // API에서 게시글/후기 데이터 로드
   useEffect(() => {
-    try {
-      const rawPosts = localStorage.getItem('posts')
-      if (rawPosts) {
-        const stored = JSON.parse(rawPosts)
-        const storedIds = new Set(stored.map((p) => String(p.id)))
-        setPosts([...stored, ...posts.filter((p) => !storedIds.has(String(p.id)))])
+    const fetchData = async () => {
+      try {
+        // 게시글 데이터 로드
+        const postsData = await getPosts({ category: 'POST', page: 0, size: 20 })
+        if (postsData.content) {
+          setPosts(postsData.content.map(post => ({
+            ...post,
+            isLiked: false, // 기본값, 실제로는 API에서 받아와야 함
+            comments: 0 // 기본값, 실제로는 API에서 받아와야 함
+          })))
+        }
+        
+        // 후기 데이터 로드
+        const reviewsData = await getPosts({ category: 'REVIEW', page: 0, size: 20 })
+        if (reviewsData.content) {
+          setReviews(reviewsData.content.map(review => ({
+            ...review,
+            subtitle: '익명', // 기본값
+            timeAgo: '방금 전' // 기본값, 실제로는 API에서 받아와야 함
+          })))
+        }
+      } catch (error) {
+        console.warn('API에서 데이터 로드 실패, 로컬 데이터 사용:', error.message)
+        
+        // API 실패 시 로컬 저장소의 작성된 글/후기 반영
+        try {
+          const rawPosts = localStorage.getItem('posts')
+          if (rawPosts) {
+            const stored = JSON.parse(rawPosts)
+            const storedIds = new Set(stored.map((p) => String(p.id)))
+            setPosts([...stored, ...posts.filter((p) => !storedIds.has(String(p.id)))])
+          }
+          const rawReviews = localStorage.getItem('reviews')
+          if (rawReviews) {
+            const stored = JSON.parse(rawReviews)
+            const storedIds = new Set(stored.map((r) => String(r.id)))
+            setReviews([...stored, ...reviews.filter((r) => !storedIds.has(String(r.id)))])
+          }
+        } catch {}
       }
-      const rawReviews = localStorage.getItem('reviews')
-      if (rawReviews) {
-        const stored = JSON.parse(rawReviews)
-        const storedIds = new Set(stored.map((r) => String(r.id)))
-        setReviews([...stored, ...reviews.filter((r) => !storedIds.has(String(r.id)))])
-      }
-    } catch {}
+    }
+    
+    fetchData()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
@@ -103,8 +156,9 @@ export default function Community() {
                 </CardHeader>
                 <Content>{p.content}</Content>
                 <Footer>
-                  <LikeButton onClick={() => toggleLike(p.id)}>
+                  <LikeButton onClick={(e) => toggleLike(p.id, e)}>
                     <HeartIcon size={18} className={p.isLiked ? 'liked' : ''} />
+                    {p.likes > 0 && <span>{p.likes}</span>}
                   </LikeButton>
                   <Small>댓글 {p.comments}</Small>
                 </Footer>

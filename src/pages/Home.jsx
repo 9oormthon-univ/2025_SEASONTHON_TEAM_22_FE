@@ -2,12 +2,14 @@ import styled from 'styled-components'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { TreePine, Compass } from 'lucide-react'
+import { createEmotion } from '../services/emotionService'
 
 export default function Home() {
   const navigate = useNavigate()
   const [selectedMood, setSelectedMood] = useState(null)
   const [showJournalInput, setShowJournalInput] = useState(false)
   const [journalText, setJournalText] = useState('')
+  const [isSaving, setIsSaving] = useState(false)
   const moodEmoji = { '행복': '😊', '보통': '🙂', '슬픔': '😢', '화남': '😠', '걱정': '😟' }
 
   const handleMoodSelect = (label) => {
@@ -15,17 +17,64 @@ export default function Home() {
     setShowJournalInput(true)
   }
 
-  const handleSaveJournal = () => {
-    const now = new Date()
-    const dateLabel = `${now.getMonth()+1}월 ${now.getDate()}일`
+  const handleSaveJournal = async () => {
+    if (!selectedMood || !journalText.trim()) return
+    
+    setIsSaving(true)
+    
     try {
+      // 감정 타입 매핑
+      const moodMapping = {
+        '행복': 'happy',
+        '보통': 'neutral', 
+        '슬픔': 'sad',
+        '화남': 'angry',
+        '걱정': 'worried'
+      }
+      
+      const emotionData = {
+        mood: moodMapping[selectedMood] || 'neutral',
+        note: journalText.trim()
+      }
+      
+      // API로 감정 기록 저장 (memberId는 기본값 1 사용)
+      try {
+        await createEmotion(emotionData, 1)
+        console.log('✅ API로 감정 기록 저장 성공')
+      } catch (apiError) {
+        console.warn('⚠️ API 저장 실패:', apiError.message)
+        console.log('📝 로컬 스토리지에만 저장됩니다')
+      }
+      
+      // 로컬 스토리지에도 백업 저장
+      const now = new Date()
+      const dateLabel = `${now.getMonth()+1}월 ${now.getDate()}일`
+      const moodRecord = {
+        emoji: moodEmoji[selectedMood] || '🙂',
+        mood: `${selectedMood}해요`,
+        date: dateLabel,
+        reason: journalText
+      }
+      
       const raw = localStorage.getItem('moodRecords')
       const list = raw ? JSON.parse(raw) : []
-      list.unshift({ emoji: moodEmoji[selectedMood] || '🙂', mood: `${selectedMood}해요`, date: dateLabel, reason: journalText })
+      list.unshift(moodRecord)
       localStorage.setItem('moodRecords', JSON.stringify(list))
-    } catch {}
-    setJournalText('')
-    setShowJournalInput(false)
+      
+      // 상태 초기화
+      setJournalText('')
+      setShowJournalInput(false)
+      setSelectedMood(null)
+      
+      // 성공 메시지 (선택사항)
+      alert('감정 기록이 저장되었습니다!')
+      
+    } catch (error) {
+      console.error('감정 기록 저장 실패:', error)
+      alert('감정 기록 저장에 실패했습니다. 다시 시도해주세요.')
+    } finally {
+      setIsSaving(false)
+    }
   }
   return (
     <Wrap>
@@ -61,7 +110,9 @@ export default function Home() {
             />
             <JournalFooter>
               <JournalCounter>{journalText.length}/100</JournalCounter>
-              <JournalSaveButton onClick={handleSaveJournal}>감정 기록하기</JournalSaveButton>
+              <JournalSaveButton onClick={handleSaveJournal} disabled={isSaving}>
+                {isSaving ? '저장 중...' : '감정 기록하기'}
+              </JournalSaveButton>
             </JournalFooter>
           </RecordCard>
         </Section>
@@ -347,6 +398,16 @@ const JournalSaveButton = styled.button`
   padding: 0.6rem 1.6rem;
   width: 100%;
   margin-top: 0.8rem;
+  transition: all 0.2s ease;
+  
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+  
+  &:not(:disabled):hover {
+    background: var(--primary-hover, #6B5A9E);
+  }
 `
 
 const WeekRow = styled.div`

@@ -4,6 +4,8 @@ import PageHeader from '../components/PageHeader'
 import { Star, ChevronDown } from 'lucide-react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { addPost, addReview } from '../utils/storage'
+import { createPost } from '../services/emotionService'
+import { toast } from 'sonner'
 
 export default function WritePost() {
   const navigate = useNavigate()
@@ -15,20 +17,63 @@ export default function WritePost() {
   const [category, setCategory] = useState(initialMode === 'review' ? '후기' : '게시글')
   const [showDropdown, setShowDropdown] = useState(false)
   const [rating, setRating] = useState(0)
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const categories = ['게시글', '후기']
 
   const isReview = mode === 'review' || category === '후기'
   const disabled = !title.trim() || !content.trim() || (isReview && rating === 0)
 
-  const handleSubmit = () => {
-    if (disabled) return
-    if (isReview) {
-      addReview({ title, content, rating, subtitle: '나', category: '후기' })
-      navigate('/community')
-    } else {
-      addPost({ title, content, author: '나' })
-      navigate('/community')
+  const handleSubmit = async () => {
+    if (disabled || isSubmitting) return
+    
+    setIsSubmitting(true)
+    
+    try {
+      if (isReview) {
+        // 후기 작성 - API 호출
+        const reviewData = {
+          postCategory: 'REVIEW',
+          title,
+          content,
+          activityId: 1, // 기본값, 실제로는 선택된 활동 ID를 사용해야 함
+          rating
+        }
+        
+        try {
+          await createPost(reviewData)
+          toast.success('후기가 성공적으로 작성되었습니다!')
+          navigate('/community')
+        } catch (apiError) {
+          console.warn('API 저장 실패, 로컬 스토리지에 저장:', apiError.message)
+          addReview({ title, content, rating, subtitle: '나', category: '후기' })
+          toast.success('후기가 작성되었습니다!')
+          navigate('/community')
+        }
+      } else {
+        // 게시글 작성 - API 호출
+        const postData = {
+          postCategory: 'POST',
+          title,
+          content
+        }
+        
+        try {
+          await createPost(postData)
+          toast.success('게시글이 성공적으로 작성되었습니다!')
+          navigate('/community')
+        } catch (apiError) {
+          console.warn('API 저장 실패, 로컬 스토리지에 저장:', apiError.message)
+          addPost({ title, content, author: '나' })
+          toast.success('게시글이 작성되었습니다!')
+          navigate('/community')
+        }
+      }
+    } catch (error) {
+      console.error('게시글/후기 작성 실패:', error)
+      toast.error('작성에 실패했습니다. 다시 시도해주세요.')
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -81,7 +126,9 @@ export default function WritePost() {
 
         <Actions>
           <GhostButton onClick={()=> navigate(-1)}>취소</GhostButton>
-          <PrimaryButton onClick={handleSubmit} disabled={disabled}>등록</PrimaryButton>
+          <PrimaryButton onClick={handleSubmit} disabled={disabled || isSubmitting}>
+            {isSubmitting ? '작성 중...' : '등록'}
+          </PrimaryButton>
         </Actions>
       </Form>
     </Wrap>

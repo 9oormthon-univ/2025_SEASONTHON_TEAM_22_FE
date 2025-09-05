@@ -1,13 +1,18 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import styled from 'styled-components'
 import PageHeader from '../components/PageHeader'
 import Tabs from '../components/Tabs'
 import { IoLocationOutline, IoTimeOutline, IoPersonOutline } from 'react-icons/io5'
 import { useNavigate } from 'react-router-dom'
-import { Compass, TreePine, BookOpen, Headphones, Target, Gamepad2, Cloud, Smile, Zap, Meh, Angry, Frown } from 'lucide-react'
+import { Compass, TreePine, BookOpen, Headphones, Target, Gamepad2, Cloud, Smile, Zap, Meh, Angry, Frown, Heart, MessageCircle } from 'lucide-react'
+import { likeActivity, unlikeActivity, getActivities } from '../services/emotionService'
+import { toast } from 'sonner'
 
 export default function Recommend() {
   const [activeTab, setActiveTab] = useState('alone')
+  const [favoriteActivities, setFavoriteActivities] = useState([])
+  const [groupActivities, setGroupActivities] = useState([])
+  const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
 
   // 카테고리별 아이콘/색상 매핑
@@ -56,7 +61,80 @@ export default function Recommend() {
     }
   ]
 
-  const groupActivities = [
+  // API에서 그룹 활동 데이터 로드
+  useEffect(() => {
+    const fetchGroupActivities = async () => {
+      try {
+        setLoading(true)
+        const response = await getActivities({ 
+          page: 0, 
+          size: 20, 
+          sort: ['createdAt,desc'] 
+        })
+        
+        if (response.content) {
+          // API 데이터를 UI에 맞게 변환
+          const transformedActivities = response.content.map(activity => ({
+            id: activity.id,
+            title: activity.title,
+            description: activity.content || '활동 설명이 없습니다.',
+            duration: '매주 화요일', // 기본값, 실제로는 API에서 받아와야 함
+            timeRange: '10:00~12:00', // 기본값, 실제로는 API에서 받아와야 함
+            difficulty: '만19세~만39세', // 기본값, 실제로는 API에서 받아와야 함
+            icon: Target, // 기본 아이콘
+            category: '불안', // 기본 카테고리
+            emotionCategory: '불안',
+            image: 'https://images.unsplash.com/photo-1581287053822-fd7bf4f4bfec?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxkZXNpZ24lMjB3b3Jrc2hvcCUyMGNyZWF0aXZlfGVufDF8fHx8MTc1NjcwNDY3M3ww&ixlib=rb-4.0.3&q=80&w=1080&utm_source=figma&utm_medium=referral',
+            recruitStatus: activity.recruitStatus,
+            likes: activity.likes || 0,
+            applyStartAt: activity.applyStartAt,
+            applyEndAt: activity.applyEndAt,
+            status: activity.recruitStatus === 'CLOSED' ? 'closed' : 'open'
+          }))
+          
+          setGroupActivities(transformedActivities)
+        }
+      } catch (error) {
+        console.warn('API에서 활동 데이터 로드 실패, 더미 데이터 사용:', error.message)
+        
+        // API 실패 시 더미 데이터 사용
+        setGroupActivities([
+          {
+            id: 1,
+            title: '청년직업역량개발 [도전! 디자이너!] 프로그램',
+            description: '서울특별시 경계선지능 평생교육 지원센터',
+            duration: '매주 화요일',
+            timeRange: '10:00~12:00',
+            difficulty: '만19세~만39세',
+            icon: Target,
+            category: '불안',
+            emotionCategory: '불안',
+            image: 'https://images.unsplash.com/photo-1581287053822-fd7bf4f4bfec?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxkZXNpZ24lMjB3b3Jrc2hvcCUyMGNyZWF0aXZlfGVufDF8fHx8MTc1NjcwNDY3M3ww&ixlib=rb-4.0.3&q=80&w=1080&utm_source=figma&utm_medium=referral',
+          },
+          {
+            id: 2,
+            title: '자신감UP! 관계소통UP! 마음 성장 보드게임',
+            description: '서울특별시 경계선지능 평생교육 지원센터',
+            duration: '매주 화요일',
+            timeRange: '10:00~12:00',
+            difficulty: '만19세~만39세',
+            icon: Gamepad2,
+            category: '걱정',
+            emotionCategory: '걱정',
+            image: 'https://images.unsplash.com/photo-1676277758786-c2ce791b7a85?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHxib2FyZCUyMGdhbWUlMjB0aGVyYXB5JTIwZ3JvdXAlMjBzb2NpYWx8ZW58MXx8fHwxNzU2NzA2Njc5fDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
+            status: 'closed'
+          }
+        ])
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchGroupActivities()
+  }, [])
+
+  // 더미 데이터 (API 실패 시 사용)
+  const defaultGroupActivities = [
     {
       id: 1,
       title: '청년직업역량개발 [도전! 디자이너!] 프로그램',
@@ -83,6 +161,55 @@ export default function Recommend() {
       status: 'closed'
     }
   ]
+
+  // 프로그램별 후기 개수 데이터
+  const reviewCounts = {
+    '청년직업역량개발 [도전! 디자이너!] 프로그램': 2,
+    '자신감UP! 관계소통UP! 마음 성장 보드게임': 3
+  }
+
+  // 찜하기 상태 확인 함수
+  const isFavorite = (activityId) => {
+    return favoriteActivities.some(fav => fav.id === activityId)
+  }
+
+  // 찜하기 토글 함수
+  const handleFavoriteToggle = async (activity, e) => {
+    e.stopPropagation() // 카드 클릭 이벤트 방지
+    
+    try {
+      if (isFavorite(activity.id)) {
+        // 찜 해제
+        await unlikeActivity(activity.id)
+        setFavoriteActivities(prev => prev.filter(fav => fav.id !== activity.id))
+        toast.success('찜을 해제했습니다')
+      } else {
+        // 찜하기
+        await likeActivity(activity.id)
+        setFavoriteActivities(prev => [...prev, {
+          id: activity.id,
+          title: activity.title,
+          category: activity.category
+        }])
+        toast.success('활동을 찜했습니다!')
+      }
+    } catch (error) {
+      console.error('찜하기 실패:', error)
+      if (error.message.includes('이미 찜한')) {
+        toast.info('이미 찜한 활동입니다.')
+      } else if (error.message.includes('찜하지 않은')) {
+        toast.info('찜하지 않은 활동입니다.')
+      } else {
+        toast.error('찜하기에 실패했습니다.')
+      }
+    }
+  }
+
+  // 후기 보기 함수
+  const handleReviewClick = (activity, e) => {
+    e.stopPropagation() // 카드 클릭 이벤트 방지
+    navigate('/community', { state: { initialTab: 'reviews', filterBy: activity.title } })
+  }
 
   return (
     <Wrap>
@@ -141,7 +268,28 @@ export default function Recommend() {
         <ActivityList>
           {groupActivities.map(activity => (
             <TogetherCard key={activity.id}>
-              <CardImage as="img" src={activity.image} alt={activity.title} />
+              <ImageContainer>
+                <CardImage as="img" src={activity.image} alt={activity.title} />
+                {/* Top Right Buttons */}
+                <ButtonContainer>
+                  {/* Review Button */}
+                  <TopButton onClick={(e) => handleReviewClick(activity, e)}>
+                    <MessageCircle size={20} />
+                    {reviewCounts[activity.title] && (
+                      <Badge>{reviewCounts[activity.title]}</Badge>
+                    )}
+                  </TopButton>
+                  
+                  {/* Heart Button */}
+                  <TopButton onClick={(e) => handleFavoriteToggle(activity, e)}>
+                    <Heart 
+                      size={20} 
+                      fill={isFavorite(activity.id) ? 'red' : 'none'}
+                      color={isFavorite(activity.id) ? 'red' : '#999999'}
+                    />
+                  </TopButton>
+                </ButtonContainer>
+              </ImageContainer>
               <CardContent>
                 <CardTitle>{activity.title}</CardTitle>
                 <TagRow>
@@ -175,7 +323,7 @@ export default function Recommend() {
                   status={activity.status === 'closed' ? 'closed' : 'active'}
                   disabled={activity.status === 'closed'}
                   onClick={() => {
-                    navigate('/activity')
+                    navigate(`/activity/${activity.id}`)
                   }}
                 >
                   {activity.status === 'closed' ? '마감' : '자세히 보기'}
@@ -280,9 +428,15 @@ const TogetherCard = styled.div`
   overflow: hidden;
 `
 
-const CardImage = styled.div`
+const ImageContainer = styled.div`
+  position: relative;
   width: 100%;
   height: 16rem;
+`
+
+const CardImage = styled.div`
+  width: 100%;
+  height: 100%;
   background: var(--muted);
   display: flex;
   align-items: center;
@@ -290,6 +444,49 @@ const CardImage = styled.div`
   font-size: 4.8rem;
   border-bottom: 1px solid var(--border);
   object-fit: cover;
+`
+
+const ButtonContainer = styled.div`
+  position: absolute;
+  top: 1.2rem;
+  right: 1.2rem;
+  display: flex;
+  gap: 0.8rem;
+`
+
+const TopButton = styled.button`
+  width: 4rem;
+  height: 4rem;
+  background: rgba(255, 255, 255, 0.9);
+  border: none;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+  
+  &:hover {
+    background: rgba(255, 255, 255, 1);
+    transform: scale(1.05);
+  }
+`
+
+const Badge = styled.span`
+  position: absolute;
+  top: -0.4rem;
+  right: -0.4rem;
+  width: 2rem;
+  height: 2rem;
+  background: var(--primary);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  font-weight: 600;
 `
 
 const CardContent = styled.div`

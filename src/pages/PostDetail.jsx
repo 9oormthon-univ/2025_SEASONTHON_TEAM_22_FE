@@ -2,29 +2,79 @@ import styled from 'styled-components'
 import PageHeader from '../components/PageHeader'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { useEffect, useState } from 'react'
+import { getPost } from '../services/emotionService'
+import { toast } from 'sonner'
 
 export default function PostDetail() {
   const navigate = useNavigate()
   const { id } = useParams()
   const { state } = useLocation()
   const [post, setPost] = useState(state?.post || null)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(null)
 
   useEffect(() => {
-    if (!post) {
-      try {
-        const raw = localStorage.getItem('posts')
-        if (raw) {
-          const found = JSON.parse(raw).find((p) => String(p.id) === String(id))
-          if (found) setPost(found)
+    const fetchPost = async () => {
+      if (!post && id) {
+        try {
+          setLoading(true)
+          setError(null)
+          
+          // API에서 게시글 데이터 가져오기
+          const apiPost = await getPost(id)
+          
+          // API 데이터를 UI에 맞게 변환
+          const transformedPost = {
+            ...apiPost,
+            author: '익명', // 기본값, 실제로는 API에서 받아와야 함
+            timeAgo: '방금 전', // 기본값, 실제로는 API에서 받아와야 함
+            isLiked: false, // 기본값, 실제로는 API에서 받아와야 함
+            comments: 0 // 기본값, 실제로는 API에서 받아와야 함
+          }
+          
+          setPost(transformedPost)
+        } catch (apiError) {
+          console.warn('API에서 게시글 로드 실패, 로컬 스토리지에서 찾기:', apiError.message)
+          
+          // API 실패 시 로컬 스토리지에서 찾기
+          try {
+            const raw = localStorage.getItem('posts')
+            if (raw) {
+              const found = JSON.parse(raw).find((p) => String(p.id) === String(id))
+              if (found) {
+                setPost(found)
+              } else {
+                setError('게시글을 찾을 수 없습니다.')
+              }
+            } else {
+              setError('게시글을 찾을 수 없습니다.')
+            }
+          } catch (localError) {
+            console.error('로컬 스토리지 읽기 실패:', localError)
+            setError('게시글을 불러오는데 실패했습니다.')
+          }
+        } finally {
+          setLoading(false)
         }
-      } catch {}
+      }
     }
+
+    fetchPost()
   }, [id, post])
 
   return (
     <Wrap>
       <PageHeader title="커뮤니티" onBack={() => navigate(-1)} />
-      {post && (
+      
+      {loading && (
+        <LoadingMessage>게시글을 불러오는 중...</LoadingMessage>
+      )}
+      
+      {error && (
+        <ErrorMessage>{error}</ErrorMessage>
+      )}
+      
+      {post && !loading && (
         <Card>
           <CardBody>
             <Title>{post.title}</Title>
@@ -43,6 +93,20 @@ export default function PostDetail() {
 
 const Wrap = styled.div`
   padding: 0 1.6rem 8rem;
+`
+
+const LoadingMessage = styled.div`
+  text-align: center;
+  padding: 2rem;
+  color: var(--muted-foreground);
+  font-size: 1.4rem;
+`
+
+const ErrorMessage = styled.div`
+  text-align: center;
+  padding: 2rem;
+  color: var(--destructive);
+  font-size: 1.4rem;
 `
 
 const Card = styled.div`

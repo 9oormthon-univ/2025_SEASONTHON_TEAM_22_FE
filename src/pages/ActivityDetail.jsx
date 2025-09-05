@@ -1,18 +1,63 @@
+import { useState, useEffect } from 'react'
+import { useParams } from 'react-router-dom'
 import styled from 'styled-components'
 import PageHeader from '../components/PageHeader'
 import { Users, BookOpen, MapPin, Calendar, Clock } from 'lucide-react'
+import { getActivity } from '../services/emotionService'
 
 export default function ActivityDetail() {
-  // 더미 데이터 (상태 전달 없이 사용)
-  const activity = {
-    id: 0,
-    title: '청년직업역량개발 [도전! 디자이너!] 프로그램',
-    description: '서울특별시 경계선지능 평생교육 지원센터',
-    image: 'https://images.unsplash.com/photo-1581287053822-fd7bf4f4bfec?auto=format&fit=crop&w=800&q=60',
-    duration: '매주 화요일',
-    timeRange: '10:00~12:00',
-    difficulty: '만19세~만39세',
-    status: 'active'
+  const { id } = useParams()
+  const [activity, setActivity] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+
+  useEffect(() => {
+    const fetchActivity = async () => {
+      try {
+        setLoading(true)
+        const data = await getActivity(id)
+        setActivity(data)
+      } catch (err) {
+        console.error('활동 조회 실패:', err)
+        setError(err.message)
+        // API 실패 시 더미 데이터 사용
+        setActivity({
+          id: parseInt(id) || 0,
+          title: '청년직업역량개발 [도전! 디자이너!] 프로그램',
+          content: '서울특별시 경계선지능 평생교육 지원센터',
+          location: '서울시 강남구',
+          activityType: 'GROUP',
+          recruitStatus: 'OPEN',
+          likes: 15,
+          applyStartAt: '2025-01-01T00:00:00Z',
+          applyEndAt: '2025-12-31T23:59:59Z',
+          createdAt: '2025-01-01T00:00:00Z',
+          updatedAt: '2025-01-01T00:00:00Z'
+        })
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchActivity()
+  }, [id])
+
+  if (loading) {
+    return (
+      <Wrap>
+        <PageHeader title="활동 추천" />
+        <LoadingMessage>활동 정보를 불러오는 중...</LoadingMessage>
+      </Wrap>
+    )
+  }
+
+  if (error && !activity) {
+    return (
+      <Wrap>
+        <PageHeader title="활동 추천" />
+        <ErrorMessage>활동 정보를 불러올 수 없습니다: {error}</ErrorMessage>
+      </Wrap>
+    )
   }
 
   const handleApply = () => {
@@ -27,29 +72,31 @@ export default function ActivityDetail() {
     <Wrap>
       <PageHeader title="활동 추천" />
 
-      <CardImage src={activity.image} alt={activity.title} />
+      <CardImage src="https://images.unsplash.com/photo-1581287053822-fd7bf4f4bfec?auto=format&fit=crop&w=800&q=60" alt={activity.title} />
 
       <Title>{activity.title}</Title>
 
       <Section>
-        <SecHeader><Users size={18} className="icon" /><h3>모집대상</h3></SecHeader>
-        <P>서울 거주 또는 서울 소재 학교/직장에 다니고 있는 경계선지능(웩슬러지능검사 기준 65~84) 청년</P>
-        <P>• 1차 20명 선정후 면접(미니 오디션)을 통해 최종 8명 선발</P>
+        <SecHeader><Users size={18} className="icon" /><h3>활동 정보</h3></SecHeader>
+        <P>활동 유형: {activity.activityType === 'ALONE' ? '혼자하기' : '함께하기'}</P>
+        <P>모집 상태: {activity.recruitStatus === 'OPEN' ? '모집중' : '마감'}</P>
+        <P>좋아요: {activity.likes}개</P>
       </Section>
 
       <Section>
-        <SecHeader><BookOpen size={18} className="icon" /><h3>교육내용</h3></SecHeader>
-        <P>디자인 기초, 캐릭터만들기(나와 서브캐릭터), 국립 중앙박물관 관람 및 몽조살 견학, 굿즈 제작부터 홍보, 수익화 전환 등</P>
+        <SecHeader><BookOpen size={18} className="icon" /><h3>활동 내용</h3></SecHeader>
+        <P>{activity.content || '활동에 대한 상세한 내용이 여기에 표시됩니다.'}</P>
       </Section>
 
       <Section>
-        <SecHeader><MapPin size={18} className="icon" /><h3>교육장소</h3></SecHeader>
-        <P>밑센터 프로그램실</P>
+        <SecHeader><MapPin size={18} className="icon" /><h3>장소</h3></SecHeader>
+        <P>{activity.location || '장소 정보가 없습니다.'}</P>
       </Section>
 
       <Section>
-        <SecHeader><Calendar size={18} className="icon" /><h3>교육일정</h3></SecHeader>
-        <P>25.09.19(금) - 25.12.18(목), 매주 화요일 및 목요일 오후 2시~4시 (총 25회)</P>
+        <SecHeader><Calendar size={18} className="icon" /><h3>신청 기간</h3></SecHeader>
+        <P>신청 시작: {new Date(activity.applyStartAt).toLocaleDateString('ko-KR')}</P>
+        <P>신청 마감: {new Date(activity.applyEndAt).toLocaleDateString('ko-KR')}</P>
       </Section>
 
       <Section>
@@ -123,6 +170,24 @@ const ApplyButton = styled.button`
   background: ${p => p.disabled ? '#CCCCCC' : 'var(--primary)'};
   color: ${p => p.disabled ? '#666666' : 'var(--primary-foreground)'};
   cursor: ${p => p.disabled ? 'not-allowed' : 'pointer'};
+`
+
+const LoadingMessage = styled.div`
+  text-align: center;
+  padding: 4rem 2rem;
+  color: #666666;
+  font-size: 1.4rem;
+`
+
+const ErrorMessage = styled.div`
+  text-align: center;
+  padding: 4rem 2rem;
+  color: #e74c3c;
+  font-size: 1.4rem;
+  background: #fdf2f2;
+  border: 1px solid #fecaca;
+  border-radius: 1rem;
+  margin: 1rem;
 `
 
 

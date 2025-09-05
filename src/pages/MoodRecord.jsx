@@ -1,7 +1,34 @@
 import styled from 'styled-components'
+import { useState, useEffect } from 'react'
 import PageHeader from '../components/PageHeader'
+import { getEmotions } from '../services/emotionService'
 
 export default function MoodRecord() {
+  const [emotions, setEmotions] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+
+  // API에서 감정 기록 데이터 가져오기
+  useEffect(() => {
+    const fetchEmotions = async () => {
+      try {
+        setLoading(true)
+        const response = await getEmotions({ page: 0, size: 50, sort: ['createdAt,desc'] })
+        setEmotions(response.content || [])
+        setError(null)
+      } catch (err) {
+        console.error('감정 기록 로드 실패:', err)
+        setError('감정 기록을 불러오는데 실패했습니다.')
+        // API 실패 시 기존 더미 데이터 사용
+        setEmotions([])
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchEmotions()
+  }, [])
+
   const allMonthlyMoodData = [
     { 
       month: '7월',
@@ -89,8 +116,20 @@ export default function MoodRecord() {
     }
   ]
 
-  const monthlyRecords = {
-    0: [
+  // API 데이터와 기존 더미 데이터 병합
+  const getRecentRecords = () => {
+    if (emotions.length > 0) {
+      // API 데이터를 기존 형식으로 변환
+      return emotions.slice(0, 7).map(emotion => ({
+        emoji: getEmojiByMood(emotion.mood),
+        mood: getMoodText(emotion.mood),
+        date: formatDate(emotion.createdAt),
+        reason: emotion.reason || emotion.note || '감정 기록'
+      }))
+    }
+    
+    // API 데이터가 없으면 기존 더미 데이터 사용
+    return [
       { emoji: '😐', mood: '보통이에요', date: '7월 29일', reason: '주말이라 좋았어요' },
       { emoji: '😐', mood: '보통이에요', date: '7월 28일', reason: '그냥 평범한 하루였어요' },
       { emoji: '😊', mood: '행복해요', date: '7월 27일', reason: '친구들과 만났어요' },
@@ -98,7 +137,44 @@ export default function MoodRecord() {
       { emoji: '😠', mood: '화나요', date: '7월 10일', reason: '교통이 너무 막혔어요' },
       { emoji: '😊', mood: '행복해요', date: '7월 08일', reason: '맛있는 걸 먹었어요' },
       { emoji: '😐', mood: '보통이에요', date: '7월 06일', reason: '무난한 하루' }
-    ],
+    ]
+  }
+
+  // 감정 타입에 따른 이모지 반환
+  const getEmojiByMood = (mood) => {
+    const moodMap = {
+      'happy': '😊',
+      'neutral': '😐', 
+      'sad': '😢',
+      'angry': '😠',
+      'worried': '😰'
+    }
+    return moodMap[mood] || '😐'
+  }
+
+  // 감정 타입에 따른 텍스트 반환
+  const getMoodText = (mood) => {
+    const moodMap = {
+      'happy': '행복해요',
+      'neutral': '보통이에요',
+      'sad': '슬퍼요', 
+      'angry': '화나요',
+      'worried': '걱정돼요'
+    }
+    return moodMap[mood] || '보통이에요'
+  }
+
+  // 날짜 포맷팅
+  const formatDate = (dateString) => {
+    if (!dateString) return ''
+    const date = new Date(dateString)
+    const month = date.getMonth() + 1
+    const day = date.getDate()
+    return `${month}월 ${day}일`
+  }
+
+  const monthlyRecords = {
+    0: getRecentRecords(),
     1: [
       { emoji: '😊', mood: '행복해요', date: '8월 26일', reason: '새로운 취미를 시작했어요' },
       { emoji: '😐', mood: '보통이에요', date: '8월 25일', reason: '평범한 일요일이었어요' },
@@ -129,7 +205,7 @@ export default function MoodRecord() {
     { week: '5주차', moods: currentMonthData?.weeks[4] || [] }
   ]
 
-  // 로컬 저장 감정 기록과 더미 데이터를 병합(저장 데이터가 상단)
+  // 로컬 저장 감정 기록과 API 데이터를 병합(저장 데이터가 상단)
   let storedRecords = []
   try {
     const raw = localStorage.getItem('moodRecords')
@@ -152,6 +228,20 @@ export default function MoodRecord() {
   return (
     <Wrap>
       <PageHeader title="감정 기록" />
+      
+      {/* 로딩 상태 표시 */}
+      {loading && (
+        <LoadingMessage>
+          감정 기록을 불러오는 중...
+        </LoadingMessage>
+      )}
+      
+      {/* 에러 상태 표시 */}
+      {error && (
+        <ErrorMessage>
+          {error}
+        </ErrorMessage>
+      )}
 
       <Card>
         <CardBody>
@@ -326,6 +416,24 @@ const Reason = styled.p`
   margin: 0.4rem 0 0 0;
   color: #666666;
   font-size: 1.4rem;
+`
+
+const LoadingMessage = styled.div`
+  text-align: center;
+  padding: 2rem;
+  color: #666666;
+  font-size: 1.4rem;
+`
+
+const ErrorMessage = styled.div`
+  text-align: center;
+  padding: 2rem;
+  color: #ff6b6b;
+  font-size: 1.4rem;
+  background: #fff5f5;
+  border: 1px solid #ffebee;
+  border-radius: 0.8rem;
+  margin: 1rem;
 `
 
 
