@@ -40,14 +40,14 @@ export default function MyPage() {
               <AlertTitle>감정 기록 알림</AlertTitle>
               <AlertDesc>매일 저녁에 감정 기록 알림을 드려요</AlertDesc>
             </AlertInfo>
-            <ToggleSwitch active={true} />
+            <ToggleSwitch $active={true} />
           </AlertItem>
           <AlertItem>
             <AlertInfo>
               <AlertTitle>찜한 활동 알림</AlertTitle>
               <AlertDesc>찜한 활동의 신청이 마감되기 전에 알려드려요</AlertDesc>
             </AlertInfo>
-            <ToggleSwitch active={true} />
+            <ToggleSwitch $active={true} />
           </AlertItem>
         </AlertList>
       </Section>
@@ -206,7 +206,7 @@ const AlertDesc = styled.p`
 const ToggleSwitch = styled.div`
   width: 4.8rem;
   height: 2.4rem;
-  background: ${props => props.active ? 'var(--primary)' : 'var(--muted)'};
+  background: ${props => props.$active ? 'var(--primary)' : 'var(--muted)'};
   border-radius: 1.2rem;
   position: relative;
   cursor: pointer;
@@ -215,7 +215,7 @@ const ToggleSwitch = styled.div`
     content: '';
     position: absolute;
     top: 0.2rem;
-    left: ${props => props.active ? '2.6rem' : '0.2rem'};
+    left: ${props => props.$active ? '2.6rem' : '0.2rem'};
     width: 2rem;
     height: 2rem;
     background: white;

@@ -1,19 +1,27 @@
 import { useEffect, useState } from 'react'
 import styled from 'styled-components'
+import { useNavigate } from 'react-router-dom'
 import PageHeader from '../components/PageHeader'
 import { Headphones, Play, Pause, RotateCcw, Volume2 } from 'lucide-react'
 
 export default function Music() {
+  const navigate = useNavigate()
   const [activityTime, setActivityTime] = useState(20 * 60)
   const [timeRemaining, setTimeRemaining] = useState(20 * 60)
   const [isPlaying, setIsPlaying] = useState(false)
 
   useEffect(() => {
     if (!isPlaying) return
-    if (timeRemaining <= 0) { setIsPlaying(false); return }
+    if (timeRemaining <= 0) { 
+      setIsPlaying(false)
+      // 활동 완료 시 완료 화면으로 이동
+      const minutes = Math.floor(activityTime / 60)
+      navigate(`/activity-completion?title=음악감상&duration=${minutes}분`)
+      return 
+    }
     const id = setInterval(() => setTimeRemaining((t) => Math.max(0, t - 1)), 1000)
     return () => clearInterval(id)
-  }, [isPlaying, timeRemaining])
+  }, [isPlaying, timeRemaining, activityTime, navigate])
 
   const formatTime = (sec) => {
     const m = String(Math.floor(sec / 60)).padStart(2, '0')
@@ -50,13 +58,13 @@ export default function Music() {
           {isPlaying && (
             <Bars>
               {[0,1,2,3,4].map((i) => (
-                <Bar key={i} style={{ animationDelay: `${i * 0.1}s`, height: `${14 + i*2}px` }} />
+                <Bar key={i} delay={`${i * 0.1}s`} height={`${14 + i*2}px`} />
               ))}
             </Bars>
           )}
 
           <Controls>
-            <CircleButton onClick={()=> setIsPlaying(v=>!v)} active>
+            <CircleButton onClick={()=> setIsPlaying(v=>!v)} $active>
               {isPlaying ? <Pause size={28} color="#fff" /> : <Play size={28} color="#fff" />}
             </CircleButton>
             <CircleButton onClick={()=>{ setIsPlaying(false); setTimeRemaining(activityTime) }}>
@@ -70,7 +78,7 @@ export default function Music() {
         <SmallTitle>감상 시간 선택</SmallTitle>
         <PresetRow>
           {[10,20,30].map((m)=> (
-            <PresetKey key={m} active={activityTime===m*60} onClick={()=>preset(m)}>{m}분</PresetKey>
+            <PresetKey key={m} $active={activityTime===m*60} onClick={()=>preset(m)}>{m}분</PresetKey>
           ))}
         </PresetRow>
       </SmallCard>
@@ -115,14 +123,25 @@ const TimeText = styled.div` font-size: 4rem; font-weight:300; color:#333; `
 const SubText = styled.p` margin:0; color:#666; `
 
 const Bars = styled.div` display:flex; gap:0.3rem; align-items:flex-end; justify-content:center; height:2.4rem; `
-const Bar = styled.div` width:0.4rem; background: linear-gradient(to top,#9EC9EB,#5478C2); border-radius:9999px; animation: beat 0.8s infinite ease-in-out; @keyframes beat{0%,100%{transform:scaleY(0.7);opacity:.7}50%{transform:scaleY(1.2);opacity:1}} `
+const Bar = styled.div`
+  width: 0.4rem;
+  background: linear-gradient(to top, #9EC9EB, #5478C2);
+  border-radius: 9999px;
+  animation: beat 0.8s infinite ease-in-out;
+  animation-delay: ${props => props.delay || '0s'};
+  height: ${props => props.height || '14px'};
+  @keyframes beat {
+    0%, 100% { transform: scaleY(0.7); opacity: .7 }
+    50% { transform: scaleY(1.2); opacity: 1 }
+  }
+`
 
 const Controls = styled.div` display:flex; gap:1.2rem; align-items:center; justify-content:center; padding-top:0.4rem; `
-const CircleButton = styled.button` width:6.4rem; height:6.4rem; border-radius:50%; border:${p=>p.active?'none':'2px solid #E0D9F0'}; background:${p=>p.active?'linear-gradient(90deg,#9EC9EB,#5478C2)':'#fff'}; color:${p=>p.active?'#fff':'#666'}; display:flex; align-items:center; justify-content:center; box-shadow:${p=>p.active?'0 10px 20px rgba(84,120,194,0.35)':'0 4px 10px rgba(0,0,0,0.06)'}; cursor:pointer; `
+const CircleButton = styled.button` width:6.4rem; height:6.4rem; border-radius:50%; border:${p=>p.$active?'none':'2px solid #E0D9F0'}; background:${p=>p.$active?'linear-gradient(90deg,#9EC9EB,#5478C2)':'#fff'}; color:${p=>p.$active?'#fff':'#666'}; display:flex; align-items:center; justify-content:center; box-shadow:${p=>p.$active?'0 10px 20px rgba(84,120,194,0.35)':'0 4px 10px rgba(0,0,0,0.06)'}; cursor:pointer; `
 
 const SmallTitle = styled.h4` margin:0 0 0.8rem 0; color:#333; text-align:center; font-size:1.4rem; `
 const PresetRow = styled.div` display:flex; gap:0.8rem; justify-content:center; `
-const PresetKey = styled.button` padding:0.8rem 1.2rem; border-radius:1.2rem; font-size:1.4rem; cursor:pointer; border:${p=>p.active?'none':'1px solid #E0D9F0'}; background:${p=>p.active?'#9EC9EB':'rgba(255,255,255,0.8)'}; color:${p=>p.active?'#fff':'#666'}; box-shadow:${p=>p.active?'0 4px 12px rgba(84,120,194,0.3)':'none'}; `
+const PresetKey = styled.button` padding:0.8rem 1.2rem; border-radius:1.2rem; font-size:1.4rem; cursor:pointer; border:${p=>p.$active?'none':'1px solid #E0D9F0'}; background:${p=>p.$active?'#9EC9EB':'rgba(255,255,255,0.8)'}; color:${p=>p.$active?'#fff':'#666'}; box-shadow:${p=>p.$active?'0 4px 12px rgba(84,120,194,0.3)':'none'}; `
 
 const TipCard = styled.div` background: linear-gradient(90deg, rgba(255,255,255,0.6), rgba(229,242,251,0.6)); border:1px solid rgba(255,255,255,0.5); border-radius:1.2rem; padding:1.2rem; backdrop-filter: blur(6px); `
 const TipRow = styled.div` display:flex; gap:0.8rem; align-items:flex-start; `

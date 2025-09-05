@@ -1,7 +1,11 @@
 import styled from 'styled-components'
+import { useNavigate } from 'react-router-dom'
 import PageHeader from '../components/PageHeader'
+import { BarChart3, Brain, Clock, Calendar } from 'lucide-react'
 
 export default function TrainingRecord() {
+  const navigate = useNavigate();
+  
   // 샘플 + 저장 데이터 병합
   const sample = [
     { date: '2025.08.30', questionsAnswered: 6, completionRate: 100 },
@@ -35,17 +39,23 @@ export default function TrainingRecord() {
           <CardTitle>진행 현황</CardTitle>
           <Stats>
             <Stat>
-              <StatIcon>📊</StatIcon>
+              <StatIcon>
+                <BarChart3 size={20} color="#7E6BB5" />
+              </StatIcon>
               <StatLabel>총 훈련 세션</StatLabel>
               <StatValue>{totalSessions}회</StatValue>
             </Stat>
             <Stat>
-              <StatIcon>🧠</StatIcon>
+              <StatIcon>
+                <Brain size={20} color="#7E6BB5" />
+              </StatIcon>
               <StatLabel>답한 질문</StatLabel>
               <StatValue>{totalQuestions}회</StatValue>
             </Stat>
             <Stat>
-              <StatIcon>⏱️</StatIcon>
+              <StatIcon>
+                <Clock size={20} color="#7E6BB5" />
+              </StatIcon>
               <StatLabel>평균 완성도</StatLabel>
               <StatValue>{averageCompletion}%</StatValue>
             </Stat>
@@ -54,16 +64,20 @@ export default function TrainingRecord() {
       </Card>
 
       <SectionTitleRow>
-        <SectionIcon>📅</SectionIcon>
+        <SectionIcon>
+          <Calendar size={20} color="#7E6BB5" />
+        </SectionIcon>
         <SectionTitle>날짜별 기록</SectionTitle>
       </SectionTitleRow>
       <Hint>날짜를 클릭하면 해당 날짜 훈련 기록을 볼 수 있어요</Hint>
 
       <List>
         {records.map((r, i) => (
-          <Row key={i}>
+          <Row key={i} onClick={() => navigate('/training-detail', { state: { date: r.date } })}>
             <RowLeft>
-              <RowIcon>📆</RowIcon>
+              <RowIcon>
+                <Calendar size={16} color="#7E6BB5" />
+              </RowIcon>
               <RowText>
                 <RowTitle>{r.date} 기록</RowTitle>
                 <RowSub>답변한 질문: {r.questionsAnswered}개</RowSub>
@@ -121,7 +135,6 @@ const StatIcon = styled.div`
   align-items: center;
   justify-content: center;
   margin: 0 auto 0.6rem;
-  font-size: 2rem;
 `
 
 const StatLabel = styled.div`
@@ -143,7 +156,11 @@ const SectionTitleRow = styled.div`
   margin-top: 1.6rem;
 `
 
-const SectionIcon = styled.span``
+const SectionIcon = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+`
 
 const SectionTitle = styled.h3`
   margin: 0;
@@ -172,6 +189,13 @@ const Row = styled.button`
   align-items: center;
   justify-content: space-between;
   text-align: left;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    background: #F8F6FF;
+    border-color: #7E6BB5;
+  }
 `
 
 const RowLeft = styled.div`
@@ -188,7 +212,6 @@ const RowIcon = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.6rem;
 `
 
 const RowText = styled.div``

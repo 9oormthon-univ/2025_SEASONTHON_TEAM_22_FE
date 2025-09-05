@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react'
 import styled from 'styled-components'
+import { useNavigate } from 'react-router-dom'
 import PageHeader from '../components/PageHeader'
 import { BookOpen, Edit3, Heart, Play, Pause, RotateCcw } from 'lucide-react'
 
 export default function Journaling() {
+  const navigate = useNavigate()
   const [activityTime, setActivityTime] = useState(15 * 60)
   const [timeRemaining, setTimeRemaining] = useState(15 * 60)
   const [isPlaying, setIsPlaying] = useState(false)
@@ -12,10 +14,16 @@ export default function Journaling() {
 
   useEffect(() => {
     if (!isPlaying) return
-    if (timeRemaining <= 0) { setIsPlaying(false); return }
+    if (timeRemaining <= 0) { 
+      setIsPlaying(false)
+      // 활동 완료 시 완료 화면으로 이동
+      const minutes = Math.floor(activityTime / 60)
+      navigate(`/activity-completion?title=일기쓰기&duration=${minutes}분`)
+      return 
+    }
     const id = setInterval(() => setTimeRemaining((t) => Math.max(0, t - 1)), 1000)
     return () => clearInterval(id)
-  }, [isPlaying, timeRemaining])
+  }, [isPlaying, timeRemaining, activityTime, navigate])
 
   const formatTime = (sec) => {
     const m = String(Math.floor(sec / 60)).padStart(2, '0')
@@ -66,11 +74,11 @@ export default function Journaling() {
           {isPlaying && (
             <ProgressWrap>
               <ProgressBar />
-              <SmallMuted style={{ color: '#F29E4C' }}>일기 작성 중...</SmallMuted>
+              <WritingText>일기 작성 중...</WritingText>
             </ProgressWrap>
           )}
           <Controls>
-            <MiniCircle onClick={()=> setIsPlaying(v=>!v)} active>
+            <MiniCircle onClick={()=> setIsPlaying(v=>!v)} $active>
               {isPlaying ? <Pause size={20} color="#fff" /> : <Play size={20} color="#fff" />}
             </MiniCircle>
             <MiniCircle onClick={()=>{ setIsPlaying(false); setTimeRemaining(activityTime) }}>
@@ -84,7 +92,7 @@ export default function Journaling() {
         <SmallTitle>일기 시간 선택</SmallTitle>
         <PresetRow>
           {[10,15,30].map((m)=> (
-            <PresetKey key={m} active={activityTime===m*60} onClick={()=>preset(m)}>{m}분</PresetKey>
+            <PresetKey key={m} $active={activityTime===m*60} onClick={()=>preset(m)}>{m}분</PresetKey>
           ))}
         </PresetRow>
       </SmallCard>
@@ -138,11 +146,11 @@ const ProgressWrap = styled.div` display:flex; flex-direction:column; align-item
 const ProgressBar = styled.div` width: 3.2rem; height:0.4rem; border-radius: 9999px; background: linear-gradient(90deg,#F6C88F,#F29E4C); animation: pulse 1.5s infinite; @keyframes pulse{0%,100%{opacity:.7}50%{opacity:1}} `
 
 const Controls = styled.div` display:flex; gap:0.8rem; align-items:center; justify-content:center; `
-const MiniCircle = styled.button` width:4.8rem; height:4.8rem; border-radius:50%; border:${p=>p.active?'none':'2px solid #E0D9F0'}; background:${p=>p.active?'linear-gradient(90deg,#F6C88F,#F29E4C)':'#fff'}; color:${p=>p.active?'#fff':'#666'}; display:flex; align-items:center; justify-content:center; box-shadow:${p=>p.active?'0 6px 14px rgba(242,158,76,0.35)':'0 4px 10px rgba(0,0,0,0.06)'}; cursor:pointer; `
+const MiniCircle = styled.button` width:4.8rem; height:4.8rem; border-radius:50%; border:${p=>p.$active?'none':'2px solid #E0D9F0'}; background:${p=>p.$active?'linear-gradient(90deg,#F6C88F,#F29E4C)':'#fff'}; color:${p=>p.$active?'#fff':'#666'}; display:flex; align-items:center; justify-content:center; box-shadow:${p=>p.$active?'0 6px 14px rgba(242,158,76,0.35)':'0 4px 10px rgba(0,0,0,0.06)'}; cursor:pointer; `
 
 const SmallTitle = styled.h4` margin:0 0 0.8rem 0; color:#333; text-align:center; font-size:1.4rem; `
 const PresetRow = styled.div` display:flex; gap:0.8rem; justify-content:center; `
-const PresetKey = styled.button` padding:0.8rem 1.2rem; border-radius:1.2rem; font-size:1.4rem; cursor:pointer; border:${p=>p.active?'none':'1px solid #E0D9F0'}; background:${p=>p.active?'#F6C88F':'rgba(255,255,255,0.8)'}; color:${p=>p.active?'#fff':'#666'}; box-shadow:${p=>p.active?'0 4px 12px rgba(246,200,143,0.3)':'none'}; `
+const PresetKey = styled.button` padding:0.8rem 1.2rem; border-radius:1.2rem; font-size:1.4rem; cursor:pointer; border:${p=>p.$active?'none':'1px solid #E0D9F0'}; background:${p=>p.$active?'#F6C88F':'rgba(255,255,255,0.8)'}; color:${p=>p.$active?'#fff':'#666'}; box-shadow:${p=>p.$active?'0 4px 12px rgba(246,200,143,0.3)':'none'}; `
 
 const TipCard = styled.div`
   background: linear-gradient(90deg, rgba(255,255,255,0.6), rgba(255,242,224,0.6));
@@ -159,5 +167,11 @@ const TipIcon = styled.div`
 `
 const TipTitle = styled.h4` margin: 0 0 0.2rem 0; color: #333; font-size: 1.4rem; `
 const TipText = styled.p` margin: 0; color: #666; font-size: 1.2rem; `
+
+const WritingText = styled.p`
+  margin: 0;
+  color: #F29E4C;
+  font-size: 1.2rem;
+`
 
 

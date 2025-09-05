@@ -51,7 +51,7 @@ export default function WritePost() {
           <Textarea value={content} onChange={(e)=> setContent(e.target.value)} />
         </Field>
 
-        <Field style={{position:'relative'}}>
+        <FieldWrapper>
           <Label>카테고리</Label>
           <Select onClick={()=> setShowDropdown(!showDropdown)}>
             <span>{category}</span>
@@ -64,7 +64,7 @@ export default function WritePost() {
               ))}
             </Dropdown>
           )}
-        </Field>
+        </FieldWrapper>
 
         {isReview && (
           <Field>
@@ -95,6 +95,13 @@ const H2 = styled.h2` margin:0; font-size: 1.8rem; color: var(--foreground); `
 
 const Form = styled.div` max-width: 48rem; margin: 0 auto; display:flex; flex-direction:column; gap: 1.2rem; `
 const Field = styled.div` display:flex; flex-direction:column; gap:0.6rem; `
+
+const FieldWrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  position: relative;
+`
 const Label = styled.label` color: var(--foreground); font-size: 1.4rem; `
 
 const Input = styled.input`

@@ -16,6 +16,8 @@ import PostDetail from './pages/PostDetail'
 import ReviewDetail from './pages/ReviewDetail'
 import MoodRecord from './pages/MoodRecord'
 import TrainingRecord from './pages/TrainingRecord'
+import TrainingDetail from './pages/TrainingDetail'
+import ActivityCompletion from './pages/ActivityCompletion'
 
 function App() {
   return (
@@ -36,6 +38,8 @@ function App() {
         <Route path="/review/:id" element={<ReviewDetail />} />
         <Route path="/training" element={<Training />} />
         <Route path="/training-record" element={<TrainingRecord />} />
+        <Route path="/training-detail" element={<TrainingDetail />} />
+        <Route path="/activity-completion" element={<ActivityCompletion />} />
         <Route path="/mypage" element={<MyPage />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />

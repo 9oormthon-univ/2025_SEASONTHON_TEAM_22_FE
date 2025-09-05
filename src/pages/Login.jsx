@@ -17,8 +17,8 @@ function Login() {
   return (
     <Container>
       <Top>
-        <LogoCircle />
-        <Title>SlowMind</Title>
+        <Logo src="/logo.png" alt="logo" />
+        {/* <Title>SlowMind</Title> */}
         <Subtitle>
           차근차근, 천천히
           <br />
@@ -104,24 +104,14 @@ const Container = styled.div`
 
 const Top = styled.div`
   text-align: center;
-  margin-bottom: 2.4rem;
 `
 
-const LogoCircle = styled.div`
-  width: 12rem;
-  height: 12rem;
+const Logo = styled.img`
+  width: 30rem;
+  height: auto;
   margin: 0 auto 1.6rem;
-  border-radius: 50%;
-  background: radial-gradient(120% 120% at 30% 20%, #e8defc 0%, #cdbef2 50%, #bba9e6 100%);
-  box-shadow: 0 1.6rem 2.8rem rgba(126,107,181,.35);
-  position: relative;
-  &::after{
-    content: '';
-    position: absolute;
-    inset: 0;
-    border-radius: 50%;
-    box-shadow: inset 0 0.6rem 1.2rem rgba(255,255,255,.6);
-  }
+  display: block;
+  object-fit: contain;
 `
 
 const Card = styled.form`
@@ -150,7 +140,6 @@ const Field = styled.div`
   display: flex;
   flex-direction: column;
   gap: 0.8rem;
-  margin-top: 1.2rem;
 `
 
 const Label = styled.label`

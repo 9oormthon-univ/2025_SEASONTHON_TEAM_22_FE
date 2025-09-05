@@ -160,7 +160,7 @@ export default function MoodRecord() {
               <WeekCol key={wi}>
                 <Bars>
                   {week.moods.map((m, mi) => (
-                    <Bar key={mi} style={{ height: `${(m.count / globalMaxCount) * 120 + 12}px`, background: m.color }} />
+                    <Bar key={mi} height={`${(m.count / globalMaxCount) * 120 + 12}px`} background={m.color} />
                   ))}
                 </Bars>
                 <WeekLabel>{week.week}</WeekLabel>
@@ -170,7 +170,7 @@ export default function MoodRecord() {
           <Legend>
             {moodLabels.map((m, i) => (
               <LegendItem key={i}>
-                <LegendColor style={{ background: m.color }} />
+                <LegendColor background={m.color} />
                 <LegendText>{m.label}</LegendText>
               </LegendItem>
             ))}
@@ -244,6 +244,8 @@ const Bars = styled.div`
 const Bar = styled.div`
   width: 1.6rem;
   border-radius: 0.2rem;
+  height: ${props => props.height || '12px'};
+  background: ${props => props.background || '#ccc'};
 `
 
 const WeekLabel = styled.span`
@@ -267,6 +269,7 @@ const LegendColor = styled.div`
   width: 1.2rem;
   height: 1.2rem;
   border-radius: 0.2rem;
+  background: ${props => props.background || '#ccc'};
 `
 
 const LegendText = styled.span`

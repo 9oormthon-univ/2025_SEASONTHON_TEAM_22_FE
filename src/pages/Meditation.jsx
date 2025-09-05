@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react'
 import styled from 'styled-components'
+import { useNavigate } from 'react-router-dom'
 import PageHeader from '../components/PageHeader'
 import { Compass, Play, Pause, RotateCcw, Heart } from 'lucide-react'
 
 export default function Meditation() {
+  const navigate = useNavigate()
   const [activityTime, setActivityTime] = useState(5 * 60)
   const [timeRemaining, setTimeRemaining] = useState(5 * 60)
   const [isPlaying, setIsPlaying] = useState(false)
@@ -13,11 +15,14 @@ export default function Meditation() {
     if (!isPlaying) return
     if (timeRemaining <= 0) {
       setIsPlaying(false)
+      // 활동 완료 시 완료 화면으로 이동
+      const minutes = Math.floor(activityTime / 60)
+      navigate(`/activity-completion?title=명상&duration=${minutes}분`)
       return
     }
     const id = setInterval(() => setTimeRemaining((t) => Math.max(0, t - 1)), 1000)
     return () => clearInterval(id)
-  }, [isPlaying, timeRemaining])
+  }, [isPlaying, timeRemaining, activityTime, navigate])
 
   const formatTime = (sec) => {
     const m = String(Math.floor(sec / 60)).padStart(2, '0')
@@ -71,7 +76,7 @@ export default function Meditation() {
       <SmallCard>
         <SmallTitle>명상 시간 선택</SmallTitle>
         <PresetRow>
-          {[5, 10, 15].map((m) => (
+          {[1, 10, 15].map((m) => (
             <PresetKey
               key={m}
               active={activityTime === m * 60}
