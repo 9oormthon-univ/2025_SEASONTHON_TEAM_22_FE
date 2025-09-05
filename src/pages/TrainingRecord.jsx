@@ -1,34 +1,74 @@
 import styled from 'styled-components'
 import { useNavigate } from 'react-router-dom'
+import { useState, useEffect } from 'react'
 import PageHeader from '../components/PageHeader'
 import { BarChart3, Brain, Clock, Calendar } from 'lucide-react'
+import { useAuth } from '../contexts/AuthContext'
+import { answerService } from '../services/memberService'
 
 export default function TrainingRecord() {
   const navigate = useNavigate();
+  const { currentUser } = useAuth();
   
-  // 샘플 + 저장 데이터 병합
-  const sample = [
-    { date: '2025.08.30', questionsAnswered: 6, completionRate: 100 },
-    { date: '2025.08.29', questionsAnswered: 6, completionRate: 100 },
-    { date: '2025.08.28', questionsAnswered: 4, completionRate: 67 },
-    { date: '2025.08.27', questionsAnswered: 6, completionRate: 100 },
-    { date: '2025.08.26', questionsAnswered: 5, completionRate: 83 },
-    { date: '2025.08.25', questionsAnswered: 3, completionRate: 50 },
-  ]
+  const [progressStatus, setProgressStatus] = useState(null);
+  const [historyRecords, setHistoryRecords] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  let stored = []
-  try {
-    const raw = localStorage.getItem('trainingRecords')
-    stored = raw ? JSON.parse(raw) : []
-  } catch {}
+  // 마음 훈련 기록 현황 조회
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!currentUser?.id) return;
+      
+      try {
+        setIsLoading(true);
+        
+        // 진행 현황 조회
+        const progress = await answerService.getProgressStatus(currentUser.id);
+        setProgressStatus(progress);
+        
+        // 날짜별 기록 조회
+        const history = await answerService.getHistory(currentUser.id, { page: 0, size: 20 });
+        setHistoryRecords(history);
+        
+      } catch (error) {
+        console.error('마음 훈련 기록 조회 실패:', error);
+        
+        // API 실패 시 샘플 데이터 사용
+        const sample = [
+          { date: '2025.08.30', answeredCount: 6, completionRate: 100 },
+          { date: '2025.08.29', answeredCount: 6, completionRate: 100 },
+          { date: '2025.08.28', answeredCount: 4, completionRate: 67 },
+          { date: '2025.08.27', answeredCount: 6, completionRate: 100 },
+          { date: '2025.08.26', answeredCount: 5, completionRate: 83 },
+          { date: '2025.08.25', answeredCount: 3, completionRate: 50 },
+        ];
+        setHistoryRecords(sample);
+        
+        const sampleProgress = {
+          totalTrainedSessions: sample.length,
+          completedAnswers: sample.reduce((sum, r) => sum + r.answeredCount, 0),
+          averageCompletion: Math.round(sample.reduce((sum, r) => sum + r.completionRate, 0) / sample.length)
+        };
+        setProgressStatus(sampleProgress);
+        
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-  const records = [...stored, ...sample]
+    fetchData();
+  }, [currentUser]);
 
-  const totalSessions = records.length
-  const totalQuestions = records.reduce((sum, r) => sum + (r.questionsAnswered || 0), 0)
-  const averageCompletion = Math.round(
-    (records.reduce((sum, r) => sum + (r.completionRate || 0), 0) || 0) / (records.length || 1)
-  )
+  if (isLoading) {
+    return (
+      <Wrap>
+        <PageHeader title="마음 훈련 기록" />
+        <div style={{ textAlign: 'center', padding: '2rem' }}>
+          로딩 중...
+        </div>
+      </Wrap>
+    );
+  }
 
   return (
     <Wrap>
@@ -43,21 +83,21 @@ export default function TrainingRecord() {
                 <BarChart3 size={20} color="#7E6BB5" />
               </StatIcon>
               <StatLabel>총 훈련 세션</StatLabel>
-              <StatValue>{totalSessions}회</StatValue>
+              <StatValue>{progressStatus?.totalTrainedSessions || 0}회</StatValue>
             </Stat>
             <Stat>
               <StatIcon>
                 <Brain size={20} color="#7E6BB5" />
               </StatIcon>
               <StatLabel>답한 질문</StatLabel>
-              <StatValue>{totalQuestions}회</StatValue>
+              <StatValue>{progressStatus?.completedAnswers || 0}회</StatValue>
             </Stat>
             <Stat>
               <StatIcon>
                 <Clock size={20} color="#7E6BB5" />
               </StatIcon>
               <StatLabel>평균 완성도</StatLabel>
-              <StatValue>{averageCompletion}%</StatValue>
+              <StatValue>{progressStatus?.averageCompletion || 0}%</StatValue>
             </Stat>
           </Stats>
         </CardBody>
@@ -72,7 +112,7 @@ export default function TrainingRecord() {
       <Hint>날짜를 클릭하면 해당 날짜 훈련 기록을 볼 수 있어요</Hint>
 
       <List>
-        {records.map((r, i) => (
+        {historyRecords.map((r, i) => (
           <Row key={i} onClick={() => navigate('/training-detail', { state: { date: r.date } })}>
             <RowLeft>
               <RowIcon>
@@ -80,7 +120,7 @@ export default function TrainingRecord() {
               </RowIcon>
               <RowText>
                 <RowTitle>{r.date} 기록</RowTitle>
-                <RowSub>답변한 질문: {r.questionsAnswered}개</RowSub>
+                <RowSub>답변한 질문: {r.answeredCount || r.questionsAnswered}개</RowSub>
               </RowText>
             </RowLeft>
             <Badge $rate={r.completionRate}>{r.completionRate}% 완료</Badge>

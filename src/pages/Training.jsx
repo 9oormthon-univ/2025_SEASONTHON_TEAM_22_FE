@@ -1,24 +1,32 @@
 import styled from 'styled-components'
 import { useNavigate } from 'react-router-dom'
 import PageHeader from '../components/PageHeader'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { IoChevronBack, IoChevronForward } from 'react-icons/io5'
 import { Check, Home, Star, Users, BookOpen, Heart } from 'lucide-react'
+import { useAuth } from '../contexts/AuthContext'
+import { questionCardService, answerService } from '../services/memberService'
+import { toast } from 'sonner'
 
 export default function Training() {
   const navigate = useNavigate()
+  const { currentUser } = useAuth()
   
-  const questions = [
-    { id: 1, category: '감정 이해', question: '오늘 하루 중 가장 기분 좋았던 순간이 언제인가요?', placeholder: '자유롭게 생각을 작성해보세요...' },
-    { id: 2, category: '자기 이해', question: '나는 언제 나답다고 느끼나요?', placeholder: '자유롭게 생각을 작성해보세요...' },
-    { id: 3, category: '관계 이해', question: '내 주변 사람들 중 가장 소중한 사람은 누구인가요? 그 이유는 무엇인가요?', placeholder: '자유롭게 생각을 작성해보세요...' },
-    { id: 4, category: '목표 설정', question: '내가 이루고 싶은 작은 목표가 있다면 무엇인가요?', placeholder: '자유롭게 생각을 작성해보세요...' },
-    { id: 5, category: '감사 표현', question: '오늘 감사했던 일이나 사람이 있다면 무엇인가요?', placeholder: '자유롭게 생각을 작성해보세요...' },
-    { id: 6, category: '미래 계획', question: '내일은 어떤 하루가 되었으면 좋겠나요?', placeholder: '자유롭게 생각을 작성해보세요...' },
+  // 기본 질문 데이터 (API 실패 시 사용)
+  const defaultQuestions = [
+    { id: 1, cardType: '감정 이해', content: '오늘 하루 중 가장 기분 좋았던 순간이 언제인가요?', placeholder: '자유롭게 생각을 작성해보세요...' },
+    { id: 2, cardType: '자기 이해', content: '나는 언제 나답다고 느끼나요?', placeholder: '자유롭게 생각을 작성해보세요...' },
+    { id: 3, cardType: '관계 이해', content: '내 주변 사람들 중 가장 소중한 사람은 누구인가요? 그 이유는 무엇인가요?', placeholder: '자유롭게 생각을 작성해보세요...' },
+    { id: 4, cardType: '목표 설정', content: '내가 이루고 싶은 작은 목표가 있다면 무엇인가요?', placeholder: '자유롭게 생각을 작성해보세요...' },
+    { id: 5, cardType: '감사 표현', content: '오늘 감사했던 일이나 사람이 있다면 무엇인가요?', placeholder: '자유롭게 생각을 작성해보세요...' },
+    { id: 6, cardType: '미래 계획', content: '내일은 어떤 하루가 되었으면 좋겠나요?', placeholder: '자유롭게 생각을 작성해보세요...' },
   ]
 
+  const [questions, setQuestions] = useState(defaultQuestions)
+  const [currentQuestionId, setCurrentQuestionId] = useState(1)
   const [idx, setIdx] = useState(0)
   const [answers, setAnswers] = useState({})
+  const [isLoading, setIsLoading] = useState(false)
 
   const current = questions[idx]
   const total = questions.length
@@ -29,6 +37,75 @@ export default function Training() {
     answers[question.id]?.trim().length > 0
   )
   const isCompleted = allQuestionsAnswered && answeredCount === total
+
+  // 이전 질문 카드 조회
+  const handlePreviousQuestion = async () => {
+    if (idx === 0) return
+    
+    try {
+      setIsLoading(true)
+      const previousCard = await questionCardService.getPrevious(currentQuestionId)
+      setCurrentQuestionId(previousCard.id)
+      setQuestions(prev => {
+        const newQuestions = [...prev]
+        newQuestions[idx - 1] = {
+          id: previousCard.id,
+          cardType: previousCard.cardType,
+          content: previousCard.content,
+          placeholder: '자유롭게 생각을 작성해보세요...'
+        }
+        return newQuestions
+      })
+      setIdx(idx - 1)
+    } catch (error) {
+      console.error('이전 질문 조회 실패:', error)
+      // API 실패 시 기본 동작
+      setIdx(idx - 1)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  // 다음 질문 카드 조회
+  const handleNextQuestion = async () => {
+    if (idx === total - 1) return
+    
+    try {
+      setIsLoading(true)
+      const nextCard = await questionCardService.getNext(currentQuestionId)
+      setCurrentQuestionId(nextCard.id)
+      setQuestions(prev => {
+        const newQuestions = [...prev]
+        newQuestions[idx + 1] = {
+          id: nextCard.id,
+          cardType: nextCard.cardType,
+          content: nextCard.content,
+          placeholder: '자유롭게 생각을 작성해보세요...'
+        }
+        return newQuestions
+      })
+      setIdx(idx + 1)
+    } catch (error) {
+      console.error('다음 질문 조회 실패:', error)
+      // API 실패 시 기본 동작
+      setIdx(idx + 1)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  // 답변 저장
+  const handleSaveAnswer = async () => {
+    if (!currentUser?.id || !answers[current.id]?.trim()) return
+    
+    try {
+      await answerService.createAnswer(currentUser.id, current.id, answers[current.id])
+      toast.success('답변이 저장되었습니다.')
+    } catch (error) {
+      console.error('답변 저장 실패:', error)
+      toast.error('답변 저장에 실패했습니다.')
+    }
+  }
 
   const handleComplete = () => {
     // 완료 후 데이터 초기화하고 홈으로 이동
@@ -172,12 +249,12 @@ export default function Training() {
       </Card>
 
       <QuestionCard>
-        <Badge>{current.category}</Badge>
-        <Question>{current.question}</Question>
+        <Badge>{current.cardType}</Badge>
+        <Question>{current.content}</Question>
       </QuestionCard>
 
       <NavRow>
-        <NavBtn disabled={idx===0} onClick={()=> setIdx(p=>Math.max(0,p-1))}>
+        <NavBtn disabled={idx===0 || isLoading} onClick={handlePreviousQuestion}>
           <IoChevronBack size={16} />
           <span>이전</span>
         </NavBtn>
@@ -187,7 +264,7 @@ export default function Training() {
             return <Dot key={q.id} $active={i===idx} $done={done} onClick={()=>setIdx(i)} />
           })}
         </Dots>
-        <NavBtn disabled={idx===total-1} onClick={()=> setIdx(p=>Math.min(total-1,p+1))}>
+        <NavBtn disabled={idx===total-1 || isLoading} onClick={handleNextQuestion}>
           <span>다음</span>
           <IoChevronForward size={16} />
         </NavBtn>
@@ -204,7 +281,17 @@ export default function Training() {
 
         <Buttons>
           <GhostButton onClick={()=>{ setIdx(0); setAnswers({}) }}>그만하기</GhostButton>
-          <PrimaryButton disabled={!((answers[current.id]||'').trim())} onClick={()=> idx<total-1 && setIdx(idx+1)}>저장하기</PrimaryButton>
+          <PrimaryButton 
+            disabled={!((answers[current.id]||'').trim()) || isLoading} 
+            onClick={async () => {
+              await handleSaveAnswer()
+              if (idx < total - 1) {
+                await handleNextQuestion()
+              }
+            }}
+          >
+            {isLoading ? '저장 중...' : '저장하기'}
+          </PrimaryButton>
         </Buttons>
       </AnswerCard>
     </Wrap>

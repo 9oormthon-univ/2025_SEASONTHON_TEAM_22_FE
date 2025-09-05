@@ -40,10 +40,8 @@ export default function Home() {
       // API로 감정 기록 저장 (memberId는 기본값 1 사용)
       try {
         await createEmotion(emotionData, 1)
-        console.log('✅ API로 감정 기록 저장 성공')
       } catch (apiError) {
-        console.warn('⚠️ API 저장 실패:', apiError.message)
-        console.log('📝 로컬 스토리지에만 저장됩니다')
+        console.warn('API 저장 실패:', apiError.message)
       }
       
       // 로컬 스토리지에도 백업 저장

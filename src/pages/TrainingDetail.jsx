@@ -1,15 +1,15 @@
-import React, { useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import styled from 'styled-components';
-import { ChevronLeft, Home, Star, Users, Brain, Heart, Calendar, BookOpen } from 'lucide-react';
+import { useState } from 'react'
+import { useNavigate, useLocation } from 'react-router-dom'
+import styled from 'styled-components'
+import { ChevronLeft, Home, Star, Users, Brain, Heart, Calendar, BookOpen } from 'lucide-react'
 
 export default function TrainingDetail() {
-  const navigate = useNavigate();
-  const location = useLocation();
-  const [currentTab, setCurrentTab] = useState('내 마음');
+  const navigate = useNavigate()
+  const location = useLocation()
+  const [currentTab, setCurrentTab] = useState('내 마음')
 
   // location.state에서 데이터 가져오기 (없으면 기본값 사용)
-  const date = location.state?.date || '2025.08.30';
+  const date = location.state?.date || '2025.08.30'
 
   const navItems = [
     { label: '홈', active: currentTab === '홈', icon: Home },

@@ -8,7 +8,7 @@ import { useNavigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import { toast } from 'sonner'
 import { useAuth } from '../contexts/AuthContext'
-import { memberService } from '../services/memberService'
+import { memberService, answerService, commentService } from '../services/memberService'
 
 export default function MyPage() {
   const navigate = useNavigate()
@@ -22,6 +22,8 @@ export default function MyPage() {
   // Edit profile states
   const [tempNickname, setTempNickname] = useState(currentUser?.nickname || '사용자')
   const [userInfo, setUserInfo] = useState(null)
+  const [trainingProgress, setTrainingProgress] = useState(null)
+  const [myComments, setMyComments] = useState([])
   
   // 사용자 정보 조회
   useEffect(() => {
@@ -36,6 +38,41 @@ export default function MyPage() {
     
     if (currentUser) {
       fetchUserInfo()
+    }
+  }, [currentUser])
+
+  // 마음 훈련 기록 현황 조회
+  useEffect(() => {
+    const fetchTrainingProgress = async () => {
+      try {
+        if (currentUser?.id) {
+          const progress = await answerService.getProgressStatus(currentUser.id)
+          setTrainingProgress(progress)
+        }
+      } catch (error) {
+        console.error('마음 훈련 기록 조회 실패:', error)
+      }
+    }
+    
+    if (currentUser?.id) {
+      fetchTrainingProgress()
+    }
+  }, [currentUser])
+
+  // 내 댓글 목록 조회
+  useEffect(() => {
+    const fetchMyComments = async () => {
+      try {
+        if (currentUser?.id) {
+          const response = await commentService.getMyComments({ page: 0, size: 10 })
+          setMyComments(response.data?.content || [])
+        }
+      } catch (error) {
+        console.error('내 댓글 목록 조회 실패:', error)
+      }
+    }
+    if (currentUser?.id) {
+      fetchMyComments()
     }
   }, [currentUser])
 
@@ -114,8 +151,22 @@ export default function MyPage() {
       <Section>
         <SectionTitle>활동</SectionTitle>
         <ActivityList>
-          <ActivityItem>내가 쓴 글</ActivityItem>
-          <ActivityItem onClick={()=> navigate('/training-record')}>마음 훈련 기록</ActivityItem>
+          <ActivityItem>
+            <ActivityItemContent>
+              <span>내가 쓴 댓글</span>
+              <ActivityProgress>{myComments.length}개</ActivityProgress>
+            </ActivityItemContent>
+          </ActivityItem>
+          <ActivityItem onClick={()=> navigate('/training-record')}>
+            <ActivityItemContent>
+              <span>마음 훈련 기록</span>
+              {trainingProgress && (
+                <ActivityProgress>
+                  총 {trainingProgress.totalTrainedSessions}회 • 완료율 {trainingProgress.averageCompletion}%
+                </ActivityProgress>
+              )}
+            </ActivityItemContent>
+          </ActivityItem>
           <ActivityItem>신청한 활동</ActivityItem>
           <ActivityItem>찜한 활동</ActivityItem>
         </ActivityList>
@@ -353,6 +404,20 @@ const ActivityItem = styled.button`
   cursor: pointer;
   transition: background 0.15s ease;
   &:hover { background: var(--muted); }
+`
+
+const ActivityItemContent = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.4rem;
+  width: 100%;
+`
+
+const ActivityProgress = styled.span`
+  font-size: 1.2rem;
+  color: var(--muted-foreground);
+  font-weight: 400;
 `
 
 const AlertList = styled.div`

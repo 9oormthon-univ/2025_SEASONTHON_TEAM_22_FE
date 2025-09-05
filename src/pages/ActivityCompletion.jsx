@@ -1,15 +1,14 @@
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import styled from 'styled-components';
-import { Check, Home, Star, Users, BookOpen, Heart } from 'lucide-react';
+import { useNavigate } from 'react-router-dom'
+import styled from 'styled-components'
+import { Check, Home, Star, Users, BookOpen, Heart } from 'lucide-react'
 
 export default function ActivityCompletion() {
-  const navigate = useNavigate();
+  const navigate = useNavigate()
   
   // URL에서 activityTitle과 activityDuration 가져오기
-  const urlParams = new URLSearchParams(window.location.search);
-  const activityTitle = urlParams.get('title') || '활동';
-  const activityDuration = urlParams.get('duration') || '5분';
+  const urlParams = new URLSearchParams(window.location.search)
+  const activityTitle = urlParams.get('title') || '활동'
+  const activityDuration = urlParams.get('duration') || '5분'
 
   const navItems = [
     { label: '홈', active: false, icon: Home },
