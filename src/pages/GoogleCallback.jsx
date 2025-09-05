@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { toast } from 'sonner'
+import { memberService } from '../services/memberService'
 
 export default function GoogleCallback() {
   const navigate = useNavigate()
@@ -22,24 +23,13 @@ export default function GoogleCallback() {
           
           // 사용자 정보를 가져오기 위해 API 호출
           try {
-            const response = await fetch('http://slowmind.ngrok.app/api/v1/members/me', {
-              headers: {
-                'Authorization': `Bearer ${accessToken}`,
-                'Content-Type': 'application/json'
-              }
-            })
-
-            if (response.ok) {
-              const userData = await response.json()
-              
-              // 로그인 상태 설정
-              login(userData, accessToken)
-              
-              toast.success('구글 로그인에 성공했습니다!')
-              navigate('/')
-            } else {
-              throw new Error('사용자 정보를 가져올 수 없습니다.')
-            }
+            const userData = await memberService.getMyInfo()
+            
+            // 로그인 상태 설정
+            login(userData, accessToken)
+            
+            toast.success('구글 로그인에 성공했습니다!')
+            navigate('/')
           } catch (error) {
             console.error('사용자 정보 조회 실패:', error)
             toast.error('로그인 처리 중 오류가 발생했습니다.')

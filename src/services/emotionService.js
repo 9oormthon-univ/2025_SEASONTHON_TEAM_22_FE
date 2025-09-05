@@ -1,4 +1,4 @@
-const API_BASE_URL = 'http://slowmind.ngrok.app/api/v1';
+const API_BASE_URL = 'https://slowmind.ngrok.app/api/v1';
 
 // 감정 기록 목록 조회
 export const getEmotions = async (pageable = { page: 0, size: 10, sort: ['createdAt,desc'] }) => {
