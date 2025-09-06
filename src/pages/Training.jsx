@@ -5,8 +5,7 @@ import { useState, useEffect } from 'react'
 import { IoChevronBack, IoChevronForward } from 'react-icons/io5'
 import { Check, Home, Star, Users, BookOpen, Heart } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
-import { getPrevious, getNext } from '../services/questionCardApi'
-import { createAnswer } from '../services/answerApi'
+// API imports removed - using localStorage instead
 import { toast } from 'sonner'
 
 export default function Training() {
@@ -61,6 +60,7 @@ export default function Training() {
   );
   const [answers, setAnswers] = useState({});
   const [isLoading, setIsLoading] = useState(false);
+  const [savedAnswers, setSavedAnswers] = useState(new Set()); // 저장된 답변 ID들을 추적
 
   // --- 2. id를 기준으로 현재 질문(current)과 순서(currentIndex)를 동적으로 계산 ---
   const currentIndex = questions.findIndex((q) => q.id === currentQuestionId);
@@ -69,13 +69,13 @@ export default function Training() {
   
   // 디버깅용 로그
   console.log('현재 질문 정보:', { currentIndex, current, total, currentQuestionId });
-  const answeredCount = Object.keys(answers).filter(
-    (k) => (answers[k] || "").trim().length > 0
-  ).length;
+  
+  // 저장된 답변 개수로 진행률 계산
+  const answeredCount = savedAnswers.size;
 
-  // 모든 질문이 완료되었는지 확인
+  // 모든 질문이 완료되었는지 확인 (저장된 답변 기준)
   const allQuestionsAnswered = questions.every(
-    (question) => answers[question.id]?.trim().length > 0
+    (question) => savedAnswers.has(question.id)
   );
   const isCompleted = allQuestionsAnswered && answeredCount === total;
 
@@ -90,32 +90,50 @@ export default function Training() {
 
   // 다음 질문 카드 조회
   const handleNextQuestion = () => {
+    // 6번 질문에서는 다음 질문으로 넘어가지 않음
+    if (current.id === 6) return;
     if (currentIndex >= total) return;
     const nextQuestionId = questions[currentIndex + 1].id;
     setCurrentQuestionId(nextQuestionId);
     // API 호출 로직은 필요 시 유지할 수 있으나, 현재는 ID 기반 네비게이션에 집중
   };
 
-  // 답변 저장
-  const handleSaveAnswer = async () => {
+  // 답변 저장 (로컬스토리지 사용)
+  const handleSaveAnswer = () => {
     // current가 존재하지 않는 경우를 방어
-    if (!current || !currentUser?.id || !answers[current.id]?.trim()) {
-      console.log('답변 저장 조건 미충족:', { current, currentUser, answer: answers[current?.id] });
+    if (!current || !answers[current.id]?.trim()) {
+      console.log('답변 저장 조건 미충족:', { current, answer: answers[current?.id] });
       return;
     }
 
     try {
-      console.log('답변 저장 시도:', {
-        memberId: currentUser.id,
-        questionCardId: current.id,
-        content: answers[current.id]
-      });
+      // 로컬스토리지에서 기존 답변 데이터 가져오기
+      const existingAnswers = JSON.parse(localStorage.getItem('trainingAnswers') || '[]');
       
-      await createAnswer(
-        currentUser.id,
-        current.id,
-        answers[current.id]
-      );
+      // 현재 답변 데이터 생성
+      const answerData = {
+        id: current.id,
+        questionId: current.id,
+        content: answers[current.id],
+        cardType: current.cardType,
+        question: current.content,
+        savedAt: new Date().toISOString(),
+        memberId: currentUser?.id || 'anonymous'
+      };
+      
+      // 기존 답변이 있으면 업데이트, 없으면 추가
+      const existingIndex = existingAnswers.findIndex(a => a.questionId === current.id);
+      if (existingIndex >= 0) {
+        existingAnswers[existingIndex] = answerData;
+      } else {
+        existingAnswers.push(answerData);
+      }
+      
+      // 로컬스토리지에 저장
+      localStorage.setItem('trainingAnswers', JSON.stringify(existingAnswers));
+      
+      // 저장된 답변 ID 추가
+      setSavedAnswers(prev => new Set([...prev, current.id]));
       toast.success("답변이 저장되었습니다.");
     } catch (error) {
       console.error("답변 저장 실패:", error);
@@ -126,6 +144,7 @@ export default function Training() {
   const handleComplete = () => {
     // 완료 후 데이터 초기화하고 홈으로 이동
     setAnswers({});
+    setSavedAnswers(new Set());
     // 첫 번째 질문으로 상태 초기화
     setCurrentQuestionId(defaultQuestions[0].id);
     setQuestions(defaultQuestions);
@@ -288,7 +307,7 @@ export default function Training() {
         </NavBtn>
         <Dots>
           {questions.map((q, i) => {
-            const done = (answers[q.id] || "").trim().length > 0;
+            const done = savedAnswers.has(q.id);
             return (
               <Dot
                 key={q.id}
@@ -303,7 +322,7 @@ export default function Training() {
         </Dots>
         <NavBtn
           // --- 수정: 'idx' 대신 'currentIndex' 사용 ---
-          disabled={currentIndex === total - 1 || isLoading}
+          disabled={currentIndex === total - 1 || isLoading || current.id === 6}
           onClick={handleNextQuestion}
         >
           <span>다음</span>
@@ -328,32 +347,30 @@ export default function Training() {
               // --- 수정: 'idx' 대신 'currentQuestionId'를 초기화 ---
               setCurrentQuestionId(defaultQuestions[0].id);
               setAnswers({});
+              setSavedAnswers(new Set());
             }}
           >
             그만하기
           </GhostButton>
           <PrimaryButton
             disabled={!(answers[current.id] || "").trim() || isLoading}
-            onClick={async () => {
-              // 6번 질문은 API 호출하지 않고 바로 완료 처리
+            onClick={() => {
+              // 모든 질문에서 저장하기 버튼을 누르면 진행률 업데이트
+              handleSaveAnswer();
+              
+              // 6번 질문이면 완료 화면으로 이동
               if (current.id === 6) {
-                toast.success('모든 질문이 완료되었습니다!')
-                navigate('/training-record')
+                // 완료 화면으로 이동 (isCompleted가 true가 되어 완료 화면이 표시됨)
                 return;
               }
               
-              await handleSaveAnswer();
-              // 마지막 질문이 아닌 경우에만 다음 질문으로 이동
+              // 6번이 아닌 질문들만 다음 질문으로 이동
               if (currentIndex < total - 1) {
-                await handleNextQuestion();
-              } else {
-                // 마지막 질문 완료 시 완료 처리
-                toast.success('모든 질문이 완료되었습니다!')
-                navigate('/training-record')
+                handleNextQuestion();
               }
             }}
           >
-            {isLoading ? "저장 중..." : (currentIndex < total - 1 ? "저장하기" : "완료하기")}
+            저장하기
           </PrimaryButton>
         </Buttons>
       </AnswerCard>
