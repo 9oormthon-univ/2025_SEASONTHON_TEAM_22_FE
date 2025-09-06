@@ -1,12 +1,16 @@
 import styled from 'styled-components'
 import { useState, useEffect } from 'react'
 import PageHeader from '../components/PageHeader'
-import { getEmotions } from '../services/emotionApi'
+import { getEmotions, getMonthlyEmotionStats } from '../services/emotionApi'
+import { useAuth } from '../contexts/AuthContext'
 
 export default function MoodRecord() {
+  const { currentUser } = useAuth()
   const [emotions, setEmotions] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [monthlyStats, setMonthlyStats] = useState([])
+  const [statsLoading, setStatsLoading] = useState(true)
 
   // API에서 감정 기록 데이터 가져오기
   useEffect(() => {
@@ -28,6 +32,74 @@ export default function MoodRecord() {
 
     fetchEmotions()
   }, [])
+
+  // 월간 감정 통계 데이터 가져오기
+  useEffect(() => {
+    const fetchMonthlyStats = async () => {
+      if (!currentUser?.id) return
+      
+      try {
+        setStatsLoading(true)
+        const currentDate = new Date()
+        const year = currentDate.getFullYear()
+        const month = currentDate.getMonth() + 1
+        
+        const response = await getMonthlyEmotionStats(currentUser.id, year, month)
+        setMonthlyStats(response.data || [])
+      } catch (err) {
+        console.error('월간 감정 통계 로드 실패:', err)
+        // API 실패 시 빈 배열로 초기화
+        setMonthlyStats([])
+      } finally {
+        setStatsLoading(false)
+      }
+    }
+
+    fetchMonthlyStats()
+  }, [currentUser?.id])
+
+  // API 데이터를 차트 형식으로 변환하는 함수
+  const convertApiDataToChartFormat = (apiData) => {
+    const emotionColors = {
+      '행복': '#FFD700',
+      '보통': '#C0C0C0', 
+      '슬픔': '#87CEEB',
+      '화남': '#FFA500',
+      '걱정': '#FF6B6B'
+    }
+
+    return apiData.map(weekData => {
+      const moods = []
+      const percentages = weekData.percentages
+      
+      // 각 감정별로 데이터 생성 (퍼센트를 그대로 사용)
+      Object.entries(percentages).forEach(([emotion, percentage]) => {
+        if (percentage > 0) {
+          moods.push({
+            emotion: emotion.toLowerCase(),
+            percentage: percentage, // 퍼센트를 그대로 사용
+            color: emotionColors[emotion] || '#CCCCCC'
+          })
+        }
+      })
+      
+      return {
+        week: `${weekData.week}주차`,
+        moods: moods
+      }
+    })
+  }
+
+  // API 데이터가 있으면 사용하고, 없으면 빈 차트 표시
+  const weeklyMoodData = monthlyStats.length > 0 
+    ? convertApiDataToChartFormat(monthlyStats)
+    : [
+        { week: '1주차', moods: [] },
+        { week: '2주차', moods: [] },
+        { week: '3주차', moods: [] },
+        { week: '4주차', moods: [] },
+        { week: '5주차', moods: [] }
+      ]
 
   const allMonthlyMoodData = [
     { 
@@ -197,13 +269,6 @@ export default function MoodRecord() {
 
   const currentMonthIndex = 1
   const currentMonthData = allMonthlyMoodData[currentMonthIndex]
-  const weeklyMoodData = [
-    { week: '1주차', moods: currentMonthData?.weeks[0] || [] },
-    { week: '2주차', moods: currentMonthData?.weeks[1] || [] },
-    { week: '3주차', moods: currentMonthData?.weeks[2] || [] },
-    { week: '4주차', moods: currentMonthData?.weeks[3] || [] },
-    { week: '5주차', moods: currentMonthData?.weeks[4] || [] }
-  ]
 
   // 로컬 저장 감정 기록과 API 데이터를 병합(저장 데이터가 상단)
   let storedRecords = []
@@ -213,9 +278,8 @@ export default function MoodRecord() {
   } catch {}
   const base = monthlyRecords[currentMonthIndex] || []
   const recentRecords = [...storedRecords, ...base].slice(0, 7)
-  const globalMaxCount = Math.max(
-    ...allMonthlyMoodData.flatMap((m) => m.weeks.flatMap((w) => w.map((x) => x.count)))
-  )
+  // 퍼센트 기반이므로 최대값은 항상 100
+  const globalMaxCount = 100
 
   const moodLabels = [
     { color: '#FFD700', label: '행복' },
@@ -245,18 +309,24 @@ export default function MoodRecord() {
 
       <Card>
         <CardBody>
-          <ChartRow>
-            {weeklyMoodData.map((week, wi) => (
-              <WeekCol key={wi}>
-                <Bars>
-                  {week.moods.map((m, mi) => (
-                    <Bar key={mi} height={`${(m.count / globalMaxCount) * 120 + 12}px`} background={m.color} />
-                  ))}
-                </Bars>
-                <WeekLabel>{week.week}</WeekLabel>
-              </WeekCol>
-            ))}
-          </ChartRow>
+          {statsLoading ? (
+            <LoadingMessage>
+              감정 통계를 불러오는 중...
+            </LoadingMessage>
+          ) : (
+            <ChartRow>
+              {weeklyMoodData.map((week, wi) => (
+                <WeekCol key={wi}>
+                  <Bars>
+                    {week.moods.map((m, mi) => (
+                      <Bar key={mi} height={`${(m.percentage / globalMaxCount) * 120 + 12}px`} background={m.color} />
+                    ))}
+                  </Bars>
+                  <WeekLabel>{week.week}</WeekLabel>
+                </WeekCol>
+              ))}
+            </ChartRow>
+          )}
           <Legend>
             {moodLabels.map((m, i) => (
               <LegendItem key={i}>

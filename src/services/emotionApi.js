@@ -140,9 +140,22 @@ export const deleteEmotion = (emotionId) => {
   });
 };
 
+// 월간 감정 통계 조회
+export const getMonthlyEmotionStats = (memberId, year, month) => {
+  const params = new URLSearchParams();
+  if (year) params.append('year', year);
+  if (month) params.append('month', month);
+  
+  const queryString = params.toString();
+  const url = queryString ? `/api/v1/emotions/${memberId}/monthly-stats?${queryString}` : `/api/v1/emotions/${memberId}/monthly-stats`;
+  
+  return apiRequest(url);
+};
+
 export default {
   getEmotions,
   createEmotion,
   updateEmotion,
-  deleteEmotion
+  deleteEmotion,
+  getMonthlyEmotionStats
 }
