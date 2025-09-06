@@ -266,7 +266,8 @@ export default function Training() {
 
       <NavRow>
         <NavBtn
-          disabled={idx === 0 || isLoading}
+          // --- 수정: 'idx' 대신 'currentIndex' 사용 ---
+          disabled={currentIndex === 0 || isLoading}
           onClick={handlePreviousQuestion}
         >
           <IoChevronBack size={16} />
@@ -278,15 +279,18 @@ export default function Training() {
             return (
               <Dot
                 key={q.id}
-                $active={i === idx}
+                // --- 수정: 'idx' 대신 'currentIndex'로 활성 상태 체크 ---
+                $active={i === currentIndex}
                 $done={done}
-                onClick={() => setIdx(i)}
+                // --- 수정: 클릭 시 'idx'가 아닌 'currentQuestionId'를 변경 ---
+                onClick={() => setCurrentQuestionId(q.id)}
               />
             );
           })}
         </Dots>
         <NavBtn
-          disabled={idx === total - 1 || isLoading}
+          // --- 수정: 'idx' 대신 'currentIndex' 사용 ---
+          disabled={currentIndex === total - 1 || isLoading}
           onClick={handleNextQuestion}
         >
           <span>다음</span>
@@ -308,7 +312,8 @@ export default function Training() {
         <Buttons>
           <GhostButton
             onClick={() => {
-              setIdx(0);
+              // --- 수정: 'idx' 대신 'currentQuestionId'를 초기화 ---
+              setCurrentQuestionId(defaultQuestions[0].id);
               setAnswers({});
             }}
           >
@@ -318,7 +323,8 @@ export default function Training() {
             disabled={!(answers[current.id] || "").trim() || isLoading}
             onClick={async () => {
               await handleSaveAnswer();
-              if (idx < total - 1) {
+              // --- 수정: 'idx' 대신 'currentIndex'로 다음 질문 여부 체크 ---
+              if (currentIndex < total - 1) {
                 await handleNextQuestion();
               }
             }}
