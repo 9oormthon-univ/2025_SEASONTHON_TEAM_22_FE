@@ -1,6 +1,6 @@
 import axios from 'axios'
 
-const API_BASE_URL = 'https://slowmind.ngrok.app/api/v1'
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
 
 // axios 인스턴스 생성
 const apiClient = axios.create({
@@ -64,7 +64,8 @@ apiClient.interceptors.response.use(
           if (window.location.pathname !== '/login') {
             window.location.href = '/login'
           }
-          throw new Error('인증이 만료되었습니다. 다시 로그인해주세요.')
+          // 원본 에러 정보를 보존하여 상위에서 구체적인 에러 처리 가능
+          return Promise.reject(refreshError)
         }
       } else {
         // 토큰이 없는 경우 로그인 페이지로 리다이렉트
@@ -97,12 +98,12 @@ const apiRequest = async (url, options = {}) => {
 // Member API 서비스
 export const memberService = {
   // 마이페이지 정보 조회
-  getMyInfo: async () => {
+  getMyInfo: () => {
     return apiRequest('/members/me')
   },
 
   // 마이페이지 정보 수정
-  updateMyInfo: async (data) => {
+  updateMyInfo: (data) => {
     return apiRequest('/members/me', {
       method: 'PUT',
       data: data,
@@ -110,7 +111,7 @@ export const memberService = {
   },
 
   // 회원가입
-  signup: async (data) => {
+  signup: (data) => {
     return apiRequest('/members/signup', {
       method: 'POST',
       data: data,
@@ -118,7 +119,7 @@ export const memberService = {
   },
 
   // 로그인
-  login: async (data) => {
+  login: (data) => {
     return apiRequest('/members/login', {
       method: 'POST',
       data: data,
@@ -129,17 +130,17 @@ export const memberService = {
 // Auth API 서비스
 export const authService = {
   // 토큰 갱신
-  refresh: async () => {
+  refresh: () => {
     return apiRequest('/auth/refresh')
   },
 
   // 로그아웃
-  logout: async () => {
+  logout: () => {
     return apiRequest('/auth/logout')
   },
 
   // 구글 로그인 (OAuth2 콜백 처리용)
-  googleLogin: async () => {
+  googleLogin: () => {
     return apiRequest('/auth/login/google')
   },
 }
@@ -147,7 +148,7 @@ export const authService = {
 // Answer API 서비스
 export const answerService = {
   // 답변 등록
-  createAnswer: async (memberId, questionCardId, content) => {
+  createAnswer: (memberId, questionCardId, content) => {
     return apiRequest(`/answers/${memberId}/${questionCardId}`, {
       method: 'POST',
       data: { content },
@@ -155,12 +156,12 @@ export const answerService = {
   },
 
   // 마음 훈련 기록 현황 조회
-  getProgressStatus: async (memberId) => {
+  getProgressStatus: (memberId) => {
     return apiRequest(`/answers/${memberId}/progress-status`)
   },
 
   // 마음 훈련 날짜별 기록 현황 조회
-  getHistory: async (memberId, pageable = { page: 0, size: 10, sort: [] }) => {
+  getHistory: (memberId, pageable = { page: 0, size: 10, sort: [] }) => {
     const params = new URLSearchParams()
     params.append('page', pageable.page)
     params.append('size', pageable.size)
@@ -172,7 +173,7 @@ export const answerService = {
   },
 
   // 일일 답변 진행률 조회
-  getDailyProgress: async (memberId) => {
+  getDailyProgress: (memberId) => {
     return apiRequest(`/answers/${memberId}/daily-progress`)
   },
 }
@@ -180,12 +181,12 @@ export const answerService = {
 // Question Card API 서비스
 export const questionCardService = {
   // 이전 질문 카드 조회
-  getPrevious: async (questionCardId) => {
+  getPrevious: (questionCardId) => {
     return apiRequest(`/question-cards/${questionCardId}/previous`)
   },
 
   // 다음 질문 카드 조회
-  getNext: async (questionCardId) => {
+  getNext: (questionCardId) => {
     return apiRequest(`/question-cards/${questionCardId}/next`)
   },
 }
@@ -193,7 +194,7 @@ export const questionCardService = {
 // Comment API 서비스
 export const commentService = {
   // 댓글 목록 조회
-  getComments: async (postId, pageable = { page: 0, size: 20, sort: [] }) => {
+  getComments: (postId, pageable = { page: 0, size: 20, sort: [] }) => {
     const params = new URLSearchParams()
     params.append('page', pageable.page)
     params.append('size', pageable.size)
@@ -205,7 +206,7 @@ export const commentService = {
   },
 
   // 댓글 작성
-  createComment: async (postId, content) => {
+  createComment: (postId, content) => {
     return apiRequest(`/posts/${postId}/comments`, {
       method: 'POST',
       data: { content },
@@ -213,7 +214,7 @@ export const commentService = {
   },
 
   // 댓글 수정
-  updateComment: async (commentId, content) => {
+  updateComment: (commentId, content) => {
     return apiRequest(`/comments/${commentId}`, {
       method: 'PUT',
       data: { content },
@@ -221,14 +222,14 @@ export const commentService = {
   },
 
   // 댓글 삭제
-  deleteComment: async (commentId) => {
+  deleteComment: (commentId) => {
     return apiRequest(`/comments/${commentId}`, {
       method: 'DELETE',
     })
   },
 
   // 내 댓글 목록 조회
-  getMyComments: async (pageable = { page: 0, size: 20, sort: [] }) => {
+  getMyComments: (pageable = { page: 0, size: 20, sort: [] }) => {
     const params = new URLSearchParams()
     params.append('page', pageable.page)
     params.append('size', pageable.size)

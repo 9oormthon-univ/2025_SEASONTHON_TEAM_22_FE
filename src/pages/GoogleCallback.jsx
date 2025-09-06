@@ -18,14 +18,11 @@ export default function GoogleCallback() {
         const success = searchParams.get('success')
 
         if (success === 'true' && accessToken && memberId) {
-          // 토큰을 localStorage에 저장
-          localStorage.setItem('accessToken', accessToken)
-          
           // 사용자 정보를 가져오기 위해 API 호출
           try {
             const userData = await memberService.getMyInfo()
             
-            // 로그인 상태 설정
+            // AuthContext의 login 함수가 토큰 저장과 상태 관리를 모두 처리
             login(userData, accessToken)
             
             toast.success('구글 로그인에 성공했습니다!')

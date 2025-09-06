@@ -41,11 +41,17 @@ export default function Login() {
     } catch (error) {
       console.error('로그인 실패:', error)
       
-      // 에러 메시지 처리
-      if (error.message.includes('401')) {
+        // HTTP 상태 코드를 직접 비교하여 안정적인 에러 처리
+      const status = error.response?.status
+      
+      if (status === 401) {
         toast.error('아이디 또는 비밀번호가 올바르지 않습니다.')
-      } else if (error.message.includes('400')) {
+      } else if (status === 400) {
         toast.error('입력 정보를 확인해주세요.')
+      } else if (status >= 500) {
+        toast.error('서버에 문제가 발생했습니다. 잠시 후 다시 시도해주세요.')
+      } else if (!navigator.onLine) {
+        toast.error('인터넷 연결을 확인해주세요.')
       } else {
         toast.error('로그인에 실패했습니다. 다시 시도해주세요.')
       }
@@ -56,8 +62,7 @@ export default function Login() {
 
   const handleGoogleLogin = () => {
     // 구글 OAuth2 인증 페이지로 리다이렉트
-    // 백엔드에서 성공 시 http://localhost:5173/auth/google/callback?success=true&accessToken=...&memberId=... 로 리다이렉트
-    window.location.href = 'https://slowmind.ngrok.app/oauth2/authorization/google'
+    window.location.href = import.meta.env.VITE_GOOGLE_OAUTH_URL
   }
 
   const handleDevLogin = () => {
@@ -151,11 +156,13 @@ export default function Login() {
           구글로 로그인
         </GoogleButton>
 
-        {/* 개발용 로그인 버튼 */}
-        <DevLoginButton type="button" onClick={handleDevLogin}>
-          <DevIcon>🔧</DevIcon>
-          개발용 로그인
-        </DevLoginButton>
+        {/* 개발용 로그인 버튼 - 개발 환경에서만 표시 */}
+        {process.env.NODE_ENV === 'development' && (
+          <DevLoginButton type="button" onClick={handleDevLogin}>
+            <DevIcon>🔧</DevIcon>
+            개발용 로그인
+          </DevLoginButton>
+        )}
 
         <TermsText>
           로그인하시면 <TermsLink>서비스 이용약관</TermsLink>과 <TermsLink>개인정보 처리방침</TermsLink>에<br />

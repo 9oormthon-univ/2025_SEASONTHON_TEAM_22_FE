@@ -1,6 +1,6 @@
 import axios from 'axios'
 
-const API_BASE_URL = 'https://slowmind.ngrok.app/api/v1'
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
 
 // axios 인스턴스 생성
 const apiClient = axios.create({
@@ -64,7 +64,8 @@ apiClient.interceptors.response.use(
           if (window.location.pathname !== '/login') {
             window.location.href = '/login'
           }
-          throw new Error('인증이 만료되었습니다. 다시 로그인해주세요.')
+          // 원본 에러 정보를 보존하여 상위에서 구체적인 에러 처리 가능
+          return Promise.reject(refreshError)
         }
       } else {
         // 토큰이 없는 경우 로그인 페이지로 리다이렉트
@@ -97,66 +98,46 @@ const apiRequest = async (url, options = {}) => {
 // ===== 감정 관련 API =====
 
 // 감정 기록 목록 조회
-export const getEmotions = async (pageable = { page: 0, size: 10, sort: ['createdAt,desc'] }) => {
-  try {
-    const params = new URLSearchParams();
-    params.append('page', pageable.page || 0);
-    params.append('size', pageable.size || 10);
-    
-    if (pageable.sort && pageable.sort.length > 0) {
-      pageable.sort.forEach(sort => {
-        params.append('sort', sort);
-      });
-    }
-
-    return apiRequest(`/emotions?${params.toString()}`);
-  } catch (error) {
-    console.error('감정 기록 목록 조회 실패:', error);
-    throw error;
+export const getEmotions = (pageable = { page: 0, size: 10, sort: ['createdAt,desc'] }) => {
+  const params = new URLSearchParams();
+  params.append('page', pageable.page || 0);
+  params.append('size', pageable.size || 10);
+  
+  if (pageable.sort && pageable.sort.length > 0) {
+    pageable.sort.forEach(sort => {
+      params.append('sort', sort);
+    });
   }
+
+  return apiRequest(`/emotions?${params.toString()}`);
 };
 
 // 감정 기록 생성
-export const createEmotion = async (emotionData, memberId = 1) => {
-  try {
-    const requestBody = {
-      emotionState: emotionData.mood,
-      emotionText: emotionData.note
-    };
+export const createEmotion = (emotionData, memberId = 1) => {
+  const requestBody = {
+    emotionState: emotionData.mood,
+    emotionText: emotionData.note
+  };
 
-    return apiRequest(`/emotions?member-id=${memberId}`, {
-      method: 'POST',
-      data: requestBody,
-    });
-  } catch (error) {
-    console.error('감정 기록 생성 실패:', error);
-    throw error;
-  }
+  return apiRequest(`/emotions?member-id=${memberId}`, {
+    method: 'POST',
+    data: requestBody,
+  });
 };
 
 // 감정 기록 수정
-export const updateEmotion = async (emotionId, emotionData) => {
-  try {
-    return apiRequest(`/emotions/${emotionId}`, {
-      method: 'PUT',
-      data: emotionData,
-    });
-  } catch (error) {
-    console.error('감정 기록 수정 실패:', error);
-    throw error;
-  }
+export const updateEmotion = (emotionId, emotionData) => {
+  return apiRequest(`/emotions/${emotionId}`, {
+    method: 'PUT',
+    data: emotionData,
+  });
 };
 
 // 감정 기록 삭제
-export const deleteEmotion = async (emotionId) => {
-  try {
-    return apiRequest(`/emotions/${emotionId}`, {
-      method: 'DELETE',
-    });
-  } catch (error) {
-    console.error('감정 기록 삭제 실패:', error);
-    throw error;
-  }
+export const deleteEmotion = (emotionId) => {
+  return apiRequest(`/emotions/${emotionId}`, {
+    method: 'DELETE',
+  });
 };
 
 export default {

@@ -76,7 +76,7 @@ export default function Meditation() {
       <SmallCard>
         <SmallTitle>명상 시간 선택</SmallTitle>
         <PresetRow>
-          {[1, 10, 15].map((m) => (
+          {[5, 10, 15].map((m) => (
             <PresetKey
               key={m}
               active={activityTime === m * 60}

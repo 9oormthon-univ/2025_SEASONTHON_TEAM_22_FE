@@ -4,7 +4,7 @@ import { applyActivity, cancelActivity } from '../services/activityApi'
 import { toast } from 'sonner'
 
 // 개발 모드 설정 (API 서버가 없을 때 사용)
-const DEV_MODE = true // 실제 배포 시에는 false로 변경
+const DEV_MODE = import.meta.env.VITE_DEV_MODE === 'true'
 
 const useApplicationsStore = create(
   persist(

@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import { TreePine, Compass, User, LogOut } from 'lucide-react'
 import { createEmotion } from '../services/emotionApi'
 import { useAuth } from '../contexts/AuthContext'
+import MoodCompleteModal from '../components/MoodCompleteModal'
 
 export default function Home() {
   const navigate = useNavigate()
@@ -13,12 +14,29 @@ export default function Home() {
   const [journalText, setJournalText] = useState('')
   const [isSaving, setIsSaving] = useState(false)
   const [showProfileMenu, setShowProfileMenu] = useState(false)
+  const [showMoodModal, setShowMoodModal] = useState(false)
   const profileMenuRef = useRef(null)
   const moodEmoji = { '행복': '😊', '보통': '🙂', '슬픔': '😢', '화남': '😠', '걱정': '😟' }
 
   const handleMoodSelect = (label) => {
     setSelectedMood(label)
     setShowJournalInput(true)
+  }
+
+  const handleCloseMoodModal = () => {
+    setShowMoodModal(false)
+  }
+
+  // 한국어 라벨을 영어 키로 변환
+  const getMoodKey = (koreanLabel) => {
+    const moodMap = {
+      '행복': 'happy',
+      '보통': 'neutral', 
+      '슬픔': 'sad',
+      '화남': 'angry',
+      '걱정': 'worried'
+    }
+    return moodMap[koreanLabel] || 'happy'
   }
 
   const handleLogout = () => {
@@ -88,8 +106,8 @@ export default function Home() {
       setShowJournalInput(false)
       setSelectedMood(null)
       
-      // 성공 메시지 (선택사항)
-      alert('감정 기록이 저장되었습니다!')
+      // 성공 모달 표시
+      setShowMoodModal(true)
       
     } catch (error) {
       console.error('감정 기록 저장 실패:', error)
@@ -226,6 +244,13 @@ export default function Home() {
           </SummaryRow>
         </RecordCard>
       </Section>
+
+      {/* 감정 기록 완료 모달 */}
+      <MoodCompleteModal
+        isOpen={showMoodModal}
+        onClose={handleCloseMoodModal}
+        selectedMood={getMoodKey(selectedMood)}
+      />
     </Wrap>
   )
 }

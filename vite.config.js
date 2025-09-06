@@ -18,8 +18,8 @@ export default defineConfig({
         scope: '/',
         start_url: '/',
         icons: [
-          { src: '/vite.svg', sizes: '192x192', type: 'image/svg+xml', purpose: 'any' },
-          { src: '/vite.svg', sizes: '512x512', type: 'image/svg+xml', purpose: 'any' },
+          { src: '/logo.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
+          { src: '/logo.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
         ],
       },
       workbox: {

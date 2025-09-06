@@ -1,6 +1,6 @@
 import axios from 'axios'
 
-const API_BASE_URL = 'https://slowmind.ngrok.app/api/v1'
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
 
 // axios 인스턴스 생성
 const apiClient = axios.create({
@@ -64,7 +64,8 @@ apiClient.interceptors.response.use(
           if (window.location.pathname !== '/login') {
             window.location.href = '/login'
           }
-          throw new Error('인증이 만료되었습니다. 다시 로그인해주세요.')
+          // 원본 에러 정보를 보존하여 상위에서 구체적인 에러 처리 가능
+          return Promise.reject(refreshError)
         }
       } else {
         // 토큰이 없는 경우 로그인 페이지로 리다이렉트
@@ -97,148 +98,113 @@ const apiRequest = async (url, options = {}) => {
 // ===== 게시글 관련 API =====
 
 // 게시글 상세 조회
-export const getPost = async (id) => {
-  try {
-    return apiRequest(`/posts/${id}`);
-  } catch (error) {
-    console.error('게시글 상세 조회 실패:', error);
-    throw error;
-  }
+export const getPost = (id) => {
+  return apiRequest(`/posts/${id}`);
 };
 
 // 게시글 수정
-export const updatePost = async (id, postData) => {
-  try {
-    const requestBody = {
-      title: postData.title,
-      content: postData.content
-    };
+export const updatePost = (id, postData) => {
+  const requestBody = {
+    title: postData.title,
+    content: postData.content
+  };
 
-    // REVIEW 카테고리인 경우 rating 추가
-    if (postData.category === 'REVIEW' && postData.rating !== undefined) {
-      requestBody.rating = postData.rating;
-    }
-
-    return apiRequest(`/posts/${id}`, {
-      method: 'PUT',
-      data: requestBody,
-    });
-  } catch (error) {
-    console.error('게시글 수정 실패:', error);
-    throw error;
+  // REVIEW 카테고리인 경우 rating 추가
+  if (postData.category === 'REVIEW' && postData.rating !== undefined) {
+    requestBody.rating = postData.rating;
   }
+
+  return apiRequest(`/posts/${id}`, {
+    method: 'PUT',
+    data: requestBody,
+  });
 };
 
 // 게시글 삭제
-export const deletePost = async (id) => {
-  try {
-    return apiRequest(`/posts/${id}`, {
-      method: 'DELETE',
-    });
-  } catch (error) {
-    console.error('게시글 삭제 실패:', error);
-    throw error;
-  }
+export const deletePost = (id) => {
+  return apiRequest(`/posts/${id}`, {
+    method: 'DELETE',
+  });
 };
 
 // 게시글 목록 조회
-export const getPosts = async (filters = {}) => {
-  try {
-    const params = new URLSearchParams();
-    
-    // 필터 조건 추가
-    if (filters.category) {
-      params.append('category', filters.category);
-    }
-    if (filters.activityId) {
-      params.append('activityId', filters.activityId);
-    }
-    if (filters.memberId) {
-      params.append('memberId', filters.memberId);
-    }
-    
-    // 페이지네이션
-    if (filters.page !== undefined) {
-      params.append('page', filters.page);
-    }
-    if (filters.size !== undefined) {
-      params.append('size', filters.size);
-    }
-    
-    // 정렬
-    if (filters.sort) {
-      if (Array.isArray(filters.sort)) {
-        filters.sort.forEach(sortItem => {
-          params.append('sort', sortItem);
-        });
-      } else {
-        params.append('sort', filters.sort);
-      }
-    }
-
-    const queryString = params.toString();
-    const url = queryString ? `/posts?${queryString}` : '/posts';
-
-    return apiRequest(url);
-  } catch (error) {
-    console.error('게시글 목록 조회 실패:', error);
-    throw error;
+export const getPosts = (filters = {}) => {
+  const params = new URLSearchParams();
+  
+  // 필터 조건 추가
+  if (filters.category) {
+    params.append('category', filters.category);
   }
+  if (filters.activityId) {
+    params.append('activityId', filters.activityId);
+  }
+  if (filters.memberId) {
+    params.append('memberId', filters.memberId);
+  }
+  
+  // 페이지네이션
+  if (filters.page !== undefined) {
+    params.append('page', filters.page);
+  }
+  if (filters.size !== undefined) {
+    params.append('size', filters.size);
+  }
+  
+  // 정렬
+  if (filters.sort) {
+    if (Array.isArray(filters.sort)) {
+      filters.sort.forEach(sortItem => {
+        params.append('sort', sortItem);
+      });
+    } else {
+      params.append('sort', filters.sort);
+    }
+  }
+
+  const queryString = params.toString();
+  const url = queryString ? `/posts?${queryString}` : '/posts';
+
+  return apiRequest(url);
 };
 
 // 게시글 생성
-export const createPost = async (postData) => {
-  try {
-    const requestBody = {
-      postCategory: postData.postCategory,
-      title: postData.title,
-      content: postData.content
-    };
+export const createPost = (postData) => {
+  const requestBody = {
+    postCategory: postData.postCategory,
+    title: postData.title,
+    content: postData.content
+  };
 
-    // REVIEW 카테고리인 경우 activityId와 rating 필수
-    if (postData.postCategory === 'REVIEW') {
-      if (!postData.activityId) {
-        throw new Error('후기 작성 시 활동 ID가 필요합니다.');
-      }
-      if (!postData.rating) {
-        throw new Error('후기 작성 시 별점이 필요합니다.');
-      }
-      requestBody.activityId = postData.activityId;
-      requestBody.rating = postData.rating;
+  // REVIEW 카테고리인 경우 activityId와 rating 필수
+  if (postData.postCategory === 'REVIEW') {
+    if (!postData.activityId) {
+      throw new Error('후기 작성 시 활동 ID가 필요합니다.');
     }
-
-    return apiRequest('/posts', {
-      method: 'POST',
-      data: requestBody,
-    });
-  } catch (error) {
-    console.error('게시글 생성 실패:', error);
-    throw error;
+    if (!postData.rating) {
+      throw new Error('후기 작성 시 별점이 필요합니다.');
+    }
+    requestBody.activityId = postData.activityId;
+    requestBody.rating = postData.rating;
   }
+
+  return apiRequest('/posts', {
+    method: 'POST',
+    data: requestBody,
+  });
 };
 
 // 게시글 좋아요
-export const likePost = async (id) => {
-  try {
-    return apiRequest(`/posts/${id}/like`, {
-      method: 'POST',
-    });
-  } catch (error) {
-    console.error('게시글 좋아요 실패:', error);
-    throw error;
-  }
+export const likePost = (id) => {
+  return apiRequest(`/posts/${id}/like`, {
+    method: 'POST',
+  });
 };
 
 // 게시글 좋아요 취소
-export const unlikePost = async (id) => {
-  try {
-    return apiRequest(`/posts/${id}/like`, {
-      method: 'DELETE',
-    });
-  } catch (error) {
-    console.error('게시글 좋아요 취소 실패:', error);
-    throw error;
-  }
+export const unlikePost = (id) => {
+  return apiRequest(`/posts/${id}/like`, {
+    method: 'DELETE',
+  });
 };
 
 export default {

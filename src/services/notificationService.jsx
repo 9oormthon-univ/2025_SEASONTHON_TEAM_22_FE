@@ -155,5 +155,3 @@ const Body = styled.div`
   line-height: 1.3;
   margin-top: 0.4rem;
 `
-
-

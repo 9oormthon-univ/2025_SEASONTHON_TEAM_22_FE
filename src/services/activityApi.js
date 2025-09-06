@@ -1,6 +1,6 @@
 import axios from 'axios'
 
-const API_BASE_URL = 'https://slowmind.ngrok.app/api/v1'
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
 
 // axios 인스턴스 생성
 const apiClient = axios.create({
@@ -64,7 +64,8 @@ apiClient.interceptors.response.use(
           if (window.location.pathname !== '/login') {
             window.location.href = '/login'
           }
-          throw new Error('인증이 만료되었습니다. 다시 로그인해주세요.')
+          // 원본 에러 정보를 보존하여 상위에서 구체적인 에러 처리 가능
+          return Promise.reject(refreshError)
         }
       } else {
         // 토큰이 없는 경우 로그인 페이지로 리다이렉트
@@ -97,137 +98,92 @@ const apiRequest = async (url, options = {}) => {
 // ===== 활동 관련 API =====
 
 // 활동 생성
-export const createActivity = async (activityData) => {
-  try {
-    const requestBody = {
-      activityType: activityData.activityType,
-      title: activityData.title,
-      content: activityData.content,
-      location: activityData.location,
-      applyStartAt: activityData.applyStartAt,
-      applyEndAt: activityData.applyEndAt,
-      recruitStatus: activityData.recruitStatus
-    };
+export const createActivity = (activityData) => {
+  const requestBody = {
+    activityType: activityData.activityType,
+    title: activityData.title,
+    content: activityData.content,
+    location: activityData.location,
+    applyStartAt: activityData.applyStartAt,
+    applyEndAt: activityData.applyEndAt,
+    recruitStatus: activityData.recruitStatus
+  };
 
-    return apiRequest('/activities', {
-      method: 'POST',
-      data: requestBody,
-    });
-  } catch (error) {
-    console.error('활동 생성 실패:', error);
-    throw error;
-  }
+  return apiRequest('/activities', {
+    method: 'POST',
+    data: requestBody,
+  });
 };
 
 // 활동 목록 조회 (페이지네이션)
-export const getActivities = async (pageable = { page: 0, size: 10, sort: ['createdAt,desc'] }) => {
-  try {
-    const params = new URLSearchParams();
-    params.append('page', pageable.page || 0);
-    params.append('size', pageable.size || 10);
-    
-    if (pageable.sort && pageable.sort.length > 0) {
-      pageable.sort.forEach(sort => params.append('sort', sort));
-    }
-
-    return apiRequest(`/activities?${params.toString()}`);
-  } catch (error) {
-    console.error('활동 목록 조회 실패:', error);
-    throw error;
+export const getActivities = (pageable = { page: 0, size: 10, sort: ['createdAt,desc'] }) => {
+  const params = new URLSearchParams();
+  params.append('page', pageable.page || 0);
+  params.append('size', pageable.size || 10);
+  
+  if (pageable.sort && pageable.sort.length > 0) {
+    pageable.sort.forEach(sort => params.append('sort', sort));
   }
+
+  return apiRequest(`/activities?${params.toString()}`);
 };
 
 // 활동 상세 조회
-export const getActivity = async (id) => {
-  try {
-    return apiRequest(`/activities/${id}`);
-  } catch (error) {
-    console.error('활동 상세 조회 실패:', error);
-    throw error;
-  }
+export const getActivity = (id) => {
+  return apiRequest(`/activities/${id}`);
 };
 
 // 활동 수정
-export const updateActivity = async (id, activityData) => {
-  try {
-    const requestBody = {
-      activityType: activityData.activityType,
-      title: activityData.title,
-      content: activityData.content,
-      location: activityData.location,
-      applyStartAt: activityData.applyStartAt,
-      applyEndAt: activityData.applyEndAt,
-      recruitStatus: activityData.recruitStatus
-    };
+export const updateActivity = (id, activityData) => {
+  const requestBody = {
+    activityType: activityData.activityType,
+    title: activityData.title,
+    content: activityData.content,
+    location: activityData.location,
+    applyStartAt: activityData.applyStartAt,
+    applyEndAt: activityData.applyEndAt,
+    recruitStatus: activityData.recruitStatus
+  };
 
-    return apiRequest(`/activities/${id}`, {
-      method: 'PUT',
-      data: requestBody,
-    });
-  } catch (error) {
-    console.error('활동 수정 실패:', error);
-    throw error;
-  }
+  return apiRequest(`/activities/${id}`, {
+    method: 'PUT',
+    data: requestBody,
+  });
 };
 
 // 활동 삭제
-export const deleteActivity = async (id) => {
-  try {
-    return apiRequest(`/activities/${id}`, {
-      method: 'DELETE',
-    });
-  } catch (error) {
-    console.error('활동 삭제 실패:', error);
-    throw error;
-  }
+export const deleteActivity = (id) => {
+  return apiRequest(`/activities/${id}`, {
+    method: 'DELETE',
+  });
 };
 
 // 활동 찜
-export const likeActivity = async (id) => {
-  try {
-    return apiRequest(`/activities/${id}/like`, {
-      method: 'POST',
-    });
-  } catch (error) {
-    console.error('활동 찜 실패:', error);
-    throw error;
-  }
+export const likeActivity = (id) => {
+  return apiRequest(`/activities/${id}/like`, {
+    method: 'POST',
+  });
 };
 
 // 활동 찜 해제
-export const unlikeActivity = async (id) => {
-  try {
-    return apiRequest(`/activities/${id}/like`, {
-      method: 'DELETE',
-    });
-  } catch (error) {
-    console.error('활동 찜 해제 실패:', error);
-    throw error;
-  }
+export const unlikeActivity = (id) => {
+  return apiRequest(`/activities/${id}/like`, {
+    method: 'DELETE',
+  });
 };
 
 // 활동 신청
-export const applyActivity = async (id) => {
-  try {
-    return apiRequest(`/activities/${id}/apply`, {
-      method: 'POST',
-    });
-  } catch (error) {
-    console.error('활동 신청 실패:', error);
-    throw error;
-  }
+export const applyActivity = (id) => {
+  return apiRequest(`/activities/${id}/apply`, {
+    method: 'POST',
+  });
 };
 
 // 활동 신청 취소
-export const cancelActivity = async (id) => {
-  try {
-    return apiRequest(`/activities/${id}/apply`, {
-      method: 'DELETE',
-    });
-  } catch (error) {
-    console.error('활동 신청 취소 실패:', error);
-    throw error;
-  }
+export const cancelActivity = (id) => {
+  return apiRequest(`/activities/${id}/apply`, {
+    method: 'DELETE',
+  });
 };
 
 export default {
