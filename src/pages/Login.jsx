@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import { ChevronLeft } from 'lucide-react'
 import { toast } from 'sonner'
 import { useAuth } from '../contexts/AuthContext'
-import axios from 'axios'
+import { login as loginApi } from '../services/memberApi'
 
 export default function Login() {
   const navigate = useNavigate()
@@ -27,8 +27,8 @@ export default function Login() {
     setIsLoading(true)
     
     try {
-      // axios를 사용한 로그인 API 호출
-      const response = await axios.post('/api/v1/members/login', {
+      // API를 사용한 로그인
+      const response = await loginApi({
         loginId: formData.username,
         password: formData.password
       })

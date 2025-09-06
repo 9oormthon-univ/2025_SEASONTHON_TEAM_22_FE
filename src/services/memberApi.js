@@ -59,28 +59,18 @@ export const updateMyInfo = (memberId, data) => {
 }
 
 // 회원가입
-export const signup = (formData) => {
-  const requestBody = {
-    loginId: formData.username,
-    email: formData.email,
-    password: formData.password,
-    nickname: formData.username,
-  };
+export const signup = (data) => {
   return apiRequest('/api/v1/members/signup', {
     method: 'POST',
-    data: requestBody,
+    data: data,
   })
 }
 
 // 로그인
-export const login = (formData) => {
-  const requestBody = {
-    loginId: formData.username,
-    password: formData.password,
-  }
+export const login = (data) => {
   return apiRequest('/api/v1/members/login', {
     method: 'POST',
-    data: requestBody,
+    data: data,
   })
 }
 
