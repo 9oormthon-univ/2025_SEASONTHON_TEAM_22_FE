@@ -66,6 +66,9 @@ export default function Training() {
   const currentIndex = questions.findIndex((q) => q.id === currentQuestionId);
   const current = questions[currentIndex];
   const total = questions.length;
+  
+  // 디버깅용 로그
+  console.log('현재 질문 정보:', { currentIndex, current, total, currentQuestionId });
   const answeredCount = Object.keys(answers).filter(
     (k) => (answers[k] || "").trim().length > 0
   ).length;
@@ -96,9 +99,18 @@ export default function Training() {
   // 답변 저장
   const handleSaveAnswer = async () => {
     // current가 존재하지 않는 경우를 방어
-    if (!current || !currentUser?.id || !answers[current.id]?.trim()) return;
+    if (!current || !currentUser?.id || !answers[current.id]?.trim()) {
+      console.log('답변 저장 조건 미충족:', { current, currentUser, answer: answers[current?.id] });
+      return;
+    }
 
     try {
+      console.log('답변 저장 시도:', {
+        memberId: currentUser.id,
+        questionCardId: current.id,
+        content: answers[current.id]
+      });
+      
       await createAnswer(
         currentUser.id,
         current.id,
@@ -324,13 +336,17 @@ export default function Training() {
             disabled={!(answers[current.id] || "").trim() || isLoading}
             onClick={async () => {
               await handleSaveAnswer();
-              // --- 수정: 'idx' 대신 'currentIndex'로 다음 질문 여부 체크 ---
+              // 마지막 질문이 아닌 경우에만 다음 질문으로 이동
               if (currentIndex < total - 1) {
                 await handleNextQuestion();
+              } else {
+                // 마지막 질문 완료 시 완료 처리
+                toast.success('모든 질문이 완료되었습니다!')
+                navigate('/training-record')
               }
             }}
           >
-            {isLoading ? "저장 중..." : "저장하기"}
+            {isLoading ? "저장 중..." : (currentIndex < total - 1 ? "저장하기" : "완료하기")}
           </PrimaryButton>
         </Buttons>
       </AnswerCard>
