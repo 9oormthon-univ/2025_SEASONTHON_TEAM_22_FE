@@ -4,71 +4,27 @@ import { useState, useEffect } from 'react'
 import PageHeader from '../components/PageHeader'
 import { BarChart3, Brain, Clock, Calendar } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
-import { getProgressStatus, getHistory } from '../services/answerApi'
 
 export default function TrainingRecord() {
   const navigate = useNavigate();
   const { currentUser } = useAuth();
   
-  const [progressStatus, setProgressStatus] = useState(null);
-  const [historyRecords, setHistoryRecords] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  // 마음 훈련 기록 현황 조회
-  useEffect(() => {
-    const fetchData = async () => {
-      if (!currentUser?.id) return;
-      
-      try {
-        setIsLoading(true);
-        
-        // 진행 현황 조회
-        const progress = await getProgressStatus(currentUser.id);
-        setProgressStatus(progress);
-        
-        // 날짜별 기록 조회
-        const history = await getHistory(currentUser.id, { page: 0, size: 20 });
-        setHistoryRecords(history);
-        
-      } catch (error) {
-        console.error('마음 훈련 기록 조회 실패:', error);
-        
-        // API 실패 시 샘플 데이터 사용
-        const sample = [
-          { date: '2025.08.30', answeredCount: 6, completionRate: 100 },
-          { date: '2025.08.29', answeredCount: 6, completionRate: 100 },
-          { date: '2025.08.28', answeredCount: 4, completionRate: 67 },
-          { date: '2025.08.27', answeredCount: 6, completionRate: 100 },
-          { date: '2025.08.26', answeredCount: 5, completionRate: 83 },
-          { date: '2025.08.25', answeredCount: 3, completionRate: 50 },
-        ];
-        setHistoryRecords(sample);
-        
-        const sampleProgress = {
-          totalTrainedSessions: sample.length,
-          completedAnswers: sample.reduce((sum, r) => sum + r.answeredCount, 0),
-          averageCompletion: Math.round(sample.reduce((sum, r) => sum + r.completionRate, 0) / sample.length)
-        };
-        setProgressStatus(sampleProgress);
-        
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchData();
-  }, [currentUser]);
-
-  if (isLoading) {
-    return (
-      <Wrap>
-        <PageHeader title="마음 훈련 기록" />
-        <div style={{ textAlign: 'center', padding: '2rem' }}>
-          로딩 중...
-        </div>
-      </Wrap>
-    );
-  }
+  // 더미 데이터로 바로 설정
+  const [progressStatus, setProgressStatus] = useState({
+    totalTrainedSessions: 6,
+    completedAnswers: 30,
+    averageCompletion: 83
+  });
+  
+  const [historyRecords, setHistoryRecords] = useState([
+    { date: '2025.08.30', answeredCount: 6, completionRate: 100 },
+    { date: '2025.08.29', answeredCount: 6, completionRate: 100 },
+    { date: '2025.08.28', answeredCount: 4, completionRate: 67 },
+    { date: '2025.08.27', answeredCount: 6, completionRate: 100 },
+    { date: '2025.08.26', answeredCount: 5, completionRate: 83 },
+    { date: '2025.08.25', answeredCount: 3, completionRate: 50 },
+  ]);
+  
 
   return (
     <Wrap>
