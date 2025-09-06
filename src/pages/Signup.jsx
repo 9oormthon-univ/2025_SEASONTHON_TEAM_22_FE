@@ -75,7 +75,7 @@ export default function Signup() {
       })
       
       // 회원가입 성공 후 자동 로그인
-      login(response.member)
+      login(response.data)
       
       toast.success('회원가입이 완료되었습니다!')
       navigate('/login')

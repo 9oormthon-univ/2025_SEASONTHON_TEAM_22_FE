@@ -34,9 +34,9 @@ export default function Login() {
       })
       
       // 로그인 성공
-      if (response.data && response.data.success) {
-        login(response.data.data.member)
-        toast.success(`${response.data.data.member.nickname}님, 환영합니다!`)
+      if (response.success) {
+        login(response.data)
+        toast.success(`${response.data.nickname}님, 환영합니다!`)
         navigate('/')
       } else {
         throw new Error('로그인 응답이 올바르지 않습니다.')

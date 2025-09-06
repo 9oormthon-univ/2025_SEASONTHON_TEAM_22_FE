@@ -29,7 +29,7 @@ export default function GoogleCallback() {
             // 백엔드에 코드를 보내고 사용자 정보를 받아옴
             const loginResponse = await loginWithGoogle(code)
             
-            if (loginResponse && loginResponse.data) {
+            if (loginResponse && loginResponse.success) {
               const userData = loginResponse.data;
               
               // AuthContext의 login 함수로 최종 로그인 처리
