@@ -76,7 +76,7 @@ export default function Training() {
       setCurrentQuestionId(nextCard.id)
       setQuestions(prev => {
         const newQuestions = [...prev]
-        newQuestions[idx + 1] = {
+        newQuestions[idx] = {
           id: nextCard.id,
           cardType: nextCard.cardType,
           content: nextCard.content,
