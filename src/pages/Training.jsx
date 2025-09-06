@@ -90,7 +90,7 @@ export default function Training() {
 
   // 다음 질문 카드 조회
   const handleNextQuestion = () => {
-    if (currentIndex >= total - 1) return;
+    if (currentIndex >= total) return;
     const nextQuestionId = questions[currentIndex + 1].id;
     setCurrentQuestionId(nextQuestionId);
     // API 호출 로직은 필요 시 유지할 수 있으나, 현재는 ID 기반 네비게이션에 집중
