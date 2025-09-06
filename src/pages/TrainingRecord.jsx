@@ -17,7 +17,7 @@ export default function TrainingRecord() {
   });
   
   const [historyRecords, setHistoryRecords] = useState([
-    { date: '2025.08.30', answeredCount: 6, completionRate: 100 },
+    { date: '2025.09.07', answeredCount: 6, completionRate: 100 },
     { date: '2025.08.29', answeredCount: 6, completionRate: 100 },
     { date: '2025.08.28', answeredCount: 4, completionRate: 67 },
     { date: '2025.08.27', answeredCount: 6, completionRate: 100 },
