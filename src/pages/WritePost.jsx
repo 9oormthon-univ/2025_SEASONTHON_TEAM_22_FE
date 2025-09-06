@@ -3,7 +3,6 @@ import styled from 'styled-components'
 import PageHeader from '../components/PageHeader'
 import { Star, ChevronDown } from 'lucide-react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { addPost, addReview } from '../utils/storage'
 import { createPost } from '../services/postApi'
 import { toast } from 'sonner'
 
@@ -40,16 +39,9 @@ export default function WritePost() {
           rating
         }
         
-        try {
-          await createPost(reviewData)
-          toast.success('후기가 성공적으로 작성되었습니다!')
-          navigate('/community')
-        } catch (apiError) {
-          console.warn('API 저장 실패, 로컬 스토리지에 저장:', apiError.message)
-          addReview({ title, content, rating, subtitle: '나', category: '후기' })
-          toast.success('후기가 작성되었습니다!')
-          navigate('/community')
-        }
+        await createPost(reviewData)
+        toast.success('후기가 성공적으로 작성되었습니다!')
+        navigate('/community')
       } else {
         // 게시글 작성 - API 호출
         const postData = {
@@ -58,16 +50,9 @@ export default function WritePost() {
           content
         }
         
-        try {
-          await createPost(postData)
-          toast.success('게시글이 성공적으로 작성되었습니다!')
-          navigate('/community')
-        } catch (apiError) {
-          console.warn('API 저장 실패, 로컬 스토리지에 저장:', apiError.message)
-          addPost({ title, content, author: '나' })
-          toast.success('게시글이 작성되었습니다!')
-          navigate('/community')
-        }
+        await createPost(postData)
+        toast.success('게시글이 성공적으로 작성되었습니다!')
+        navigate('/community')
       }
     } catch (error) {
       console.error('게시글/후기 작성 실패:', error)
