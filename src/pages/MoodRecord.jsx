@@ -246,10 +246,10 @@ export default function MoodRecord() {
     if (emotions.length > 0) {
       // API 데이터를 기존 형식으로 변환
       return emotions.slice(0, 7).map(emotion => ({
-        emoji: getEmojiByMood(emotion.mood),
-        mood: getMoodText(emotion.mood),
+        emoji: getMoodEmoji(emotion.emotionState),
+        mood: getMoodText(emotion.emotionState),
         date: formatDate(emotion.createdAt),
-        reason: emotion.reason || emotion.note || '감정 기록'
+        reason: emotion.emotionText || '감정 기록'
       }))
     }
     
@@ -280,6 +280,11 @@ export default function MoodRecord() {
   // 감정 타입에 따른 텍스트 반환
   const getMoodText = (mood) => {
     const moodMap = {
+      'HAPPY': '행복해요',
+      'SOSO': '보통이에요',
+      'SAD': '슬퍼요', 
+      'ANGER': '화나요',
+      'WORRY': '걱정돼요',
       'happy': '행복해요',
       'neutral': '보통이에요',
       'sad': '슬퍼요', 
@@ -287,6 +292,23 @@ export default function MoodRecord() {
       'worried': '걱정돼요'
     }
     return moodMap[mood] || '보통이에요'
+  }
+
+  // 감정 타입에 따른 이모지 반환
+  const getMoodEmoji = (mood) => {
+    const emojiMap = {
+      'HAPPY': '😊',
+      'SOSO': '🙂',
+      'SAD': '😢', 
+      'ANGER': '😠',
+      'WORRY': '😟',
+      'happy': '😊',
+      'neutral': '🙂',
+      'sad': '😢', 
+      'angry': '😠',
+      'worried': '😟'
+    }
+    return emojiMap[mood] || '🙂'
   }
 
   // 날짜 포맷팅
