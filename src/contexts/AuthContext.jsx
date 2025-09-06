@@ -1,106 +1,86 @@
-import { createContext, useContext, useState, useEffect } from 'react'
-import { authService } from '../services/memberService'
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+} from "react";
+import { authService, memberService } from "../services/memberService";
+import axios from "axios";
 
-const AuthContext = createContext()
+const AuthContext = createContext();
 
 export const useAuth = () => {
-  const context = useContext(AuthContext)
+  const context = useContext(AuthContext);
   if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider')
+    throw new Error("useAuth must be used within an AuthProvider");
   }
-  return context
-}
+  return context;
+};
 
 export const AuthProvider = ({ children }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
-  const [currentUser, setCurrentUser] = useState(null)
-  const [isLoading, setIsLoading] = useState(true)
+  const [currentUser, setCurrentUser] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // 앱 로딩 시 토큰 유효성 검사 및 사용자 정보 로드
+  const verifyUser = useCallback(async () => {
+    const token = localStorage.getItem("accessToken");
+    if (token) {
+      try {
+        // 토큰으로 사용자 정보를 가져와서 유효성 검증
+        const userData = await memberService.getMyInfo();
+        setCurrentUser(userData);
+      } catch (error) {
+        console.error("자동 로그인 실패 (토큰 만료 등):", error);
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("currentUser"); // 불일치 방지를 위해 함께 제거
+      }
+    }
+    setIsLoading(false);
+  }, []);
 
   useEffect(() => {
-    // 로컬스토리지에서 로그인 상태 확인
-    const user = localStorage.getItem('currentUser')
-    const token = localStorage.getItem('accessToken')
-    
-    if (user && token) {
-      setCurrentUser(JSON.parse(user))
-      setIsAuthenticated(true)
-    }
-    setIsLoading(false)
-  }, [])
+    verifyUser();
+  }, [verifyUser]);
 
-  const login = (userData, token) => {
-    localStorage.setItem('currentUser', JSON.stringify(userData))
-    if (token) {
-      localStorage.setItem('accessToken', token)
-    }
-    setCurrentUser(userData)
-    setIsAuthenticated(true)
-  }
+  // login 함수는 사용자 데이터와 토큰을 받아 처리
+  const login = async (userData, token) => {
+    localStorage.setItem("accessToken", token);
+    
+    localStorage.setItem("currentUser", JSON.stringify(userData));
+
+    // 3. Axios 헤더에 토큰을 즉시 설정 (로그인 직후 API 호출 대비)
+    // apiClient가 별도 파일에 있다면 import 해야 합니다.
+    axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+
+    // 4. 앱의 현재 상태를 업데이트
+    setCurrentUser(userData);
+  };
 
   const logout = async () => {
     try {
-      // 서버에 로그아웃 요청
-      await authService.logout()
+      await authService.logout();
     } catch (error) {
-      console.error('로그아웃 API 호출 실패:', error)
-      // API 호출이 실패해도 로컬 로그아웃은 진행
+      console.error("로그아웃 API 호출 실패:", error);
     } finally {
-      // 로컬 스토리지 정리
-      localStorage.removeItem('currentUser')
-      localStorage.removeItem('accessToken')
-      setCurrentUser(null)
-      setIsAuthenticated(false)
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("currentUser"); // currentUser도 함께 제거
+      setCurrentUser(null);
     }
-  }
-
-  // 토큰 갱신 함수
-  const refreshToken = async () => {
-    try {
-      const response = await authService.refresh()
-      if (response.success && response.data) {
-        // 새로운 토큰을 localStorage에 저장
-        localStorage.setItem('accessToken', response.data)
-        return true
-      }
-      return false
-    } catch (error) {
-      console.error('토큰 갱신 실패:', error)
-      // 토큰 갱신 실패 시 로그아웃
-      logout()
-      return false
-    }
-  }
-
-  // 구글 로그인 콜백 처리 함수
-  const handleGoogleLoginCallback = async () => {
-    try {
-      const response = await authService.googleLogin()
-      if (response.success && response.data) {
-        // 구글 로그인 성공 시 사용자 정보와 토큰 저장
-        const { member, accessToken } = response.data
-        login(member, accessToken)
-        return { success: true, user: member }
-      }
-      return { success: false, error: '구글 로그인에 실패했습니다.' }
-    } catch (error) {
-      console.error('구글 로그인 콜백 처리 실패:', error)
-      return { success: false, error: error.message }
-    }
-  }
+  };
 
   const value = {
-    isAuthenticated,
+    // isAuthenticated는 currentUser의 존재 여부로 판단
+    isAuthenticated: !!currentUser,
     currentUser,
     isLoading,
     login,
     logout,
-    refreshToken,
-    handleGoogleLoginCallback
-  }
+  };
 
   return (
     <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
-  )
-}
+    );
+};
