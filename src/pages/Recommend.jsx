@@ -63,76 +63,9 @@ export default function Recommend() {
     }
   ]
 
-  // API에서 그룹 활동 데이터 로드
+  // 더미 데이터로 그룹 활동 설정
   useEffect(() => {
-    const fetchGroupActivities = async () => {
-      try {
-        setLoading(true)
-        const response = await getActivities({ 
-          page: 0, 
-          size: 20, 
-          sort: ['createdAt,desc'] 
-        })
-        
-        if (response.content) {
-          // API 데이터를 UI에 맞게 변환
-          const transformedActivities = response.content.map(activity => ({
-            id: activity.id,
-            title: activity.title,
-            description: activity.content || '활동 설명이 없습니다.',
-            duration: '매주 화요일', // 기본값, 실제로는 API에서 받아와야 함
-            timeRange: '10:00~12:00', // 기본값, 실제로는 API에서 받아와야 함
-            difficulty: '만19세~만39세', // 기본값, 실제로는 API에서 받아와야 함
-            icon: Target, // 기본 아이콘
-            category: '불안', // 기본 카테고리
-            emotionCategory: '불안',
-            image: 'https://images.unsplash.com/photo-1581287053822-fd7bf4f4bfec?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxkZXNpZ24lMjB3b3Jrc2hvcCUyMGNyZWF0aXZlfGVufDF8fHx8MTc1NjcwNDY3M3ww&ixlib=rb-4.0.3&q=80&w=1080&utm_source=figma&utm_medium=referral',
-            recruitStatus: activity.recruitStatus,
-            likes: activity.likes || 0,
-            applyStartAt: activity.applyStartAt,
-            applyEndAt: activity.applyEndAt,
-            status: activity.recruitStatus === 'CLOSED' ? 'closed' : 'open'
-          }))
-          
-          setGroupActivities(transformedActivities)
-        }
-      } catch (error) {
-        console.warn('API에서 활동 데이터 로드 실패, 더미 데이터 사용:', error.message)
-        
-        // API 실패 시 더미 데이터 사용
-        setGroupActivities([
-          {
-            id: 1,
-            title: '청년직업역량개발 [도전! 디자이너!] 프로그램',
-            description: '서울특별시 경계선지능 평생교육 지원센터',
-            duration: '매주 화요일',
-            timeRange: '10:00~12:00',
-            difficulty: '만19세~만39세',
-            icon: Target,
-            category: '불안',
-            emotionCategory: '불안',
-            image: 'https://images.unsplash.com/photo-1581287053822-fd7bf4f4bfec?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxkZXNpZ24lMjB3b3Jrc2hvcCUyMGNyZWF0aXZlfGVufDF8fHx8MTc1NjcwNDY3M3ww&ixlib=rb-4.0.3&q=80&w=1080&utm_source=figma&utm_medium=referral',
-          },
-          {
-            id: 2,
-            title: '자신감UP! 관계소통UP! 마음 성장 보드게임',
-            description: '서울특별시 경계선지능 평생교육 지원센터',
-            duration: '매주 화요일',
-            timeRange: '10:00~12:00',
-            difficulty: '만19세~만39세',
-            icon: Gamepad2,
-            category: '걱정',
-            emotionCategory: '걱정',
-            image: 'https://images.unsplash.com/photo-1676277758786-c2ce791b7a85?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHxib2FyZCUyMGdhbWUlMjB0aGVyYXB5JTIwZ3JvdXAlMjBzb2NpYWx8ZW58MXx8fHwxNzU2NzA2Njc5fDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
-            status: 'closed'
-          }
-        ])
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    fetchGroupActivities()
+    setGroupActivities(defaultGroupActivities)
   }, [])
 
   // 더미 데이터 (API 실패 시 사용)

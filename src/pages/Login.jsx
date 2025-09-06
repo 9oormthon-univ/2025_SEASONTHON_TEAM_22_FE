@@ -34,7 +34,7 @@ export default function Login() {
       })
       
       // 로그인 성공
-      login(response.data.member, response.data.accessToken)
+      login(response.data.member)
       
       toast.success(`${response.data.member.nickname}님, 환영합니다!`)
       navigate('/')

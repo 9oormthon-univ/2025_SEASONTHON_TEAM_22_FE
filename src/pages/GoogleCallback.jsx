@@ -26,28 +26,22 @@ export default function GoogleCallback() {
 
         if (code) {
           try {
-            // 백엔드에 코드를 보내고 토큰을 받아옴
+            // 백엔드에 코드를 보내고 사용자 정보를 받아옴
             const loginResponse = await memberService.loginWithGoogle(code)
             
-            if (loginResponse && loginResponse.accessToken) {
-              const { accessToken } = loginResponse;
-              
-              // 토큰을 localStorage에 저장 (API 클라이언트가 자동으로 사용)
-              localStorage.setItem('accessToken', accessToken)
-              
-              // 사용자 정보 가져오기
-              const userData = await memberService.getMyInfo()
+            if (loginResponse && loginResponse.data) {
+              const userData = loginResponse.data;
               
               // AuthContext의 login 함수로 최종 로그인 처리
-              login(userData, accessToken)
+              login(userData)
               
               toast.success('구글 로그인에 성공했습니다!')
               navigate('/')
             } else {
-              throw new Error('토큰을 받지 못했습니다.')
+              throw new Error('사용자 정보를 받지 못했습니다.')
             }
           } catch (error) {
-            console.error('백엔드 토큰 교환 또는 사용자 정보 조회 실패:', error)
+            console.error('백엔드 로그인 처리 실패:', error)
             toast.error('로그인 처리 중 오류가 발생했습니다.')
             navigate('/login')
           }

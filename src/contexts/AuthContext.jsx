@@ -22,18 +22,15 @@ export const AuthProvider = ({ children }) => {
   const [currentUser, setCurrentUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // 앱 로딩 시 토큰 유효성 검사 및 사용자 정보 로드
+  // 앱 로딩 시 사용자 정보 로드
   const verifyUser = useCallback(async () => {
-    const token = localStorage.getItem("accessToken");
-    if (token) {
+    const userData = localStorage.getItem("currentUser");
+    if (userData) {
       try {
-        // 토큰으로 사용자 정보를 가져와서 유효성 검증
-        const userData = await memberService.getMyInfo();
-        setCurrentUser(userData);
+        setCurrentUser(JSON.parse(userData));
       } catch (error) {
-        console.error("자동 로그인 실패 (토큰 만료 등):", error);
-        localStorage.removeItem("accessToken");
-        localStorage.removeItem("currentUser"); // 불일치 방지를 위해 함께 제거
+        console.error("사용자 정보 로드 실패:", error);
+        localStorage.removeItem("currentUser");
       }
     }
     setIsLoading(false);
@@ -43,17 +40,9 @@ export const AuthProvider = ({ children }) => {
     verifyUser();
   }, [verifyUser]);
 
-  // login 함수는 사용자 데이터와 토큰을 받아 처리
-  const login = async (userData, token) => {
-    localStorage.setItem("accessToken", token);
-    
+  // login 함수는 사용자 데이터를 받아 처리
+  const login = async (userData) => {
     localStorage.setItem("currentUser", JSON.stringify(userData));
-
-    // 3. Axios 헤더에 토큰을 즉시 설정 (로그인 직후 API 호출 대비)
-    // apiClient가 별도 파일에 있다면 import 해야 합니다.
-    axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-
-    // 4. 앱의 현재 상태를 업데이트
     setCurrentUser(userData);
   };
 
@@ -63,8 +52,7 @@ export const AuthProvider = ({ children }) => {
     } catch (error) {
       console.error("로그아웃 API 호출 실패:", error);
     } finally {
-      localStorage.removeItem("accessToken");
-      localStorage.removeItem("currentUser"); // currentUser도 함께 제거
+      localStorage.removeItem("currentUser");
       setCurrentUser(null);
     }
   };
