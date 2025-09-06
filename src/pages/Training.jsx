@@ -104,12 +104,6 @@ export default function Training() {
       return;
     }
 
-    // 6번 질문은 API 연동하지 않고 바로 완료 처리
-    if (current.id === 6) {
-      console.log('6번 질문 완료 - API 연동 없이 완료 처리');
-      return;
-    }
-
     try {
       console.log('답변 저장 시도:', {
         memberId: currentUser.id,
@@ -341,6 +335,13 @@ export default function Training() {
           <PrimaryButton
             disabled={!(answers[current.id] || "").trim() || isLoading}
             onClick={async () => {
+              // 6번 질문은 API 호출하지 않고 바로 완료 처리
+              if (current.id === 6) {
+                toast.success('모든 질문이 완료되었습니다!')
+                navigate('/training-record')
+                return;
+              }
+              
               await handleSaveAnswer();
               // 마지막 질문이 아닌 경우에만 다음 질문으로 이동
               if (currentIndex < total - 1) {
