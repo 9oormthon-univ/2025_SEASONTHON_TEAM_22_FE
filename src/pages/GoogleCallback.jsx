@@ -29,8 +29,8 @@ export default function GoogleCallback() {
             // 백엔드에 코드를 보내고 토큰을 받아옴
             const loginResponse = await memberService.loginWithGoogle(code)
             
-            if (loginResponse && loginResponse.data && loginResponse.data.accessToken) {
-              const { accessToken } = loginResponse.data
+            if (loginResponse && loginResponse.accessToken) {
+              const { accessToken } = loginResponse;
               
               // 토큰을 localStorage에 저장 (API 클라이언트가 자동으로 사용)
               localStorage.setItem('accessToken', accessToken)
