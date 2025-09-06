@@ -99,12 +99,12 @@ const apiRequest = async (url, options = {}) => {
 export const memberService = {
   // 마이페이지 정보 조회
   getMyInfo: () => {
-    return apiRequest('/members/me')
+    return apiRequest('/api/v1/members/me')
   },
 
   // 마이페이지 정보 수정
   updateMyInfo: (data) => {
-    return apiRequest('/members/me', {
+    return apiRequest('/api/v1/members/me', {
       method: 'PUT',
       data: data,
     })
@@ -112,7 +112,7 @@ export const memberService = {
 
   // 회원가입
   signup: (data) => {
-    return apiRequest('/members/signup', {
+    return apiRequest('/api/v1/members/signup', {
       method: 'POST',
       data: data,
     })
@@ -120,7 +120,7 @@ export const memberService = {
 
   // 로그인
   login: (data) => {
-    return apiRequest('/members/login', {
+    return apiRequest('/api/v1/members/login', {
       method: 'POST',
       data: data,
     })
@@ -149,7 +149,7 @@ export const authService = {
 export const answerService = {
   // 답변 등록
   createAnswer: (memberId, questionCardId, content) => {
-    return apiRequest(`/answers/${memberId}/${questionCardId}`, {
+    return apiRequest(`/api/v1/answers/${memberId}/${questionCardId}`, {
       method: 'POST',
       data: { content },
     })
@@ -157,7 +157,7 @@ export const answerService = {
 
   // 마음 훈련 기록 현황 조회
   getProgressStatus: (memberId) => {
-    return apiRequest(`/answers/${memberId}/progress-status`)
+    return apiRequest(`/api/v1/answers/${memberId}/progress-status`)
   },
 
   // 마음 훈련 날짜별 기록 현황 조회
@@ -169,12 +169,12 @@ export const answerService = {
       pageable.sort.forEach(sort => params.append('sort', sort))
     }
     
-    return apiRequest(`/answers/${memberId}/history?${params.toString()}`)
+    return apiRequest(`/api/v1/answers/${memberId}/history?${params.toString()}`)
   },
 
   // 일일 답변 진행률 조회
   getDailyProgress: (memberId) => {
-    return apiRequest(`/answers/${memberId}/daily-progress`)
+    return apiRequest(`/api/v1/answers/${memberId}/daily-progress`)
   },
 }
 
@@ -182,12 +182,12 @@ export const answerService = {
 export const questionCardService = {
   // 이전 질문 카드 조회
   getPrevious: (questionCardId) => {
-    return apiRequest(`/question-cards/${questionCardId}/previous`)
+    return apiRequest(`/api/v1/question-cards/${questionCardId}/previous`)
   },
 
   // 다음 질문 카드 조회
   getNext: (questionCardId) => {
-    return apiRequest(`/question-cards/${questionCardId}/next`)
+    return apiRequest(`/api/v1/question-cards/${questionCardId}/next`)
   },
 }
 
@@ -202,12 +202,12 @@ export const commentService = {
       pageable.sort.forEach(sort => params.append('sort', sort))
     }
     
-    return apiRequest(`/posts/${postId}/comments?${params.toString()}`)
+    return apiRequest(`/api/v1/posts/${postId}/comments?${params.toString()}`)
   },
 
   // 댓글 작성
   createComment: (postId, content) => {
-    return apiRequest(`/posts/${postId}/comments`, {
+    return apiRequest(`/api/v1/posts/${postId}/comments`, {
       method: 'POST',
       data: { content },
     })
@@ -215,7 +215,7 @@ export const commentService = {
 
   // 댓글 수정
   updateComment: (commentId, content) => {
-    return apiRequest(`/comments/${commentId}`, {
+    return apiRequest(`/api/v1/comments/${commentId}`, {
       method: 'PUT',
       data: { content },
     })
@@ -223,7 +223,7 @@ export const commentService = {
 
   // 댓글 삭제
   deleteComment: (commentId) => {
-    return apiRequest(`/comments/${commentId}`, {
+    return apiRequest(`/api/v1/comments/${commentId}`, {
       method: 'DELETE',
     })
   },
@@ -237,7 +237,7 @@ export const commentService = {
       pageable.sort.forEach(sort => params.append('sort', sort))
     }
     
-    return apiRequest(`/me?${params.toString()}`)
+    return apiRequest(`/api/v1/me?${params.toString()}`)
   },
 }
 

@@ -109,7 +109,7 @@ export const createActivity = (activityData) => {
     recruitStatus: activityData.recruitStatus
   };
 
-  return apiRequest('/activities', {
+  return apiRequest('/api/v1/activities', {
     method: 'POST',
     data: requestBody,
   });
@@ -125,12 +125,12 @@ export const getActivities = (pageable = { page: 0, size: 10, sort: ['createdAt,
     pageable.sort.forEach(sort => params.append('sort', sort));
   }
 
-  return apiRequest(`/activities?${params.toString()}`);
+  return apiRequest(`/api/v1/activities?${params.toString()}`);
 };
 
 // 활동 상세 조회
 export const getActivity = (id) => {
-  return apiRequest(`/activities/${id}`);
+  return apiRequest(`/api/v1/activities/${id}`);
 };
 
 // 활동 수정
@@ -145,7 +145,7 @@ export const updateActivity = (id, activityData) => {
     recruitStatus: activityData.recruitStatus
   };
 
-  return apiRequest(`/activities/${id}`, {
+  return apiRequest(`/api/v1/activities/${id}`, {
     method: 'PUT',
     data: requestBody,
   });
@@ -153,35 +153,35 @@ export const updateActivity = (id, activityData) => {
 
 // 활동 삭제
 export const deleteActivity = (id) => {
-  return apiRequest(`/activities/${id}`, {
+  return apiRequest(`/api/v1/activities/${id}`, {
     method: 'DELETE',
   });
 };
 
 // 활동 찜
 export const likeActivity = (id) => {
-  return apiRequest(`/activities/${id}/like`, {
+  return apiRequest(`/api/v1/activities/${id}/like`, {
     method: 'POST',
   });
 };
 
 // 활동 찜 해제
 export const unlikeActivity = (id) => {
-  return apiRequest(`/activities/${id}/like`, {
+  return apiRequest(`/api/v1/activities/${id}/like`, {
     method: 'DELETE',
   });
 };
 
 // 활동 신청
 export const applyActivity = (id) => {
-  return apiRequest(`/activities/${id}/apply`, {
+  return apiRequest(`/api/v1/activities/${id}/apply`, {
     method: 'POST',
   });
 };
 
 // 활동 신청 취소
 export const cancelActivity = (id) => {
-  return apiRequest(`/activities/${id}/apply`, {
+  return apiRequest(`/api/v1/activities/${id}/apply`, {
     method: 'DELETE',
   });
 };

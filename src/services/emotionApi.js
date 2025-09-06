@@ -109,7 +109,7 @@ export const getEmotions = (pageable = { page: 0, size: 10, sort: ['createdAt,de
     });
   }
 
-  return apiRequest(`/emotions?${params.toString()}`);
+  return apiRequest(`/api/v1/emotions?${params.toString()}`);
 };
 
 // 감정 기록 생성
@@ -119,7 +119,7 @@ export const createEmotion = (emotionData, memberId = 1) => {
     emotionText: emotionData.note
   };
 
-  return apiRequest(`/emotions?member-id=${memberId}`, {
+  return apiRequest(`/api/v1/emotions?member-id=${memberId}`, {
     method: 'POST',
     data: requestBody,
   });
@@ -127,7 +127,7 @@ export const createEmotion = (emotionData, memberId = 1) => {
 
 // 감정 기록 수정
 export const updateEmotion = (emotionId, emotionData) => {
-  return apiRequest(`/emotions/${emotionId}`, {
+  return apiRequest(`/api/v1/emotions/${emotionId}`, {
     method: 'PUT',
     data: emotionData,
   });
@@ -135,7 +135,7 @@ export const updateEmotion = (emotionId, emotionData) => {
 
 // 감정 기록 삭제
 export const deleteEmotion = (emotionId) => {
-  return apiRequest(`/emotions/${emotionId}`, {
+  return apiRequest(`/api/v1/emotions/${emotionId}`, {
     method: 'DELETE',
   });
 };

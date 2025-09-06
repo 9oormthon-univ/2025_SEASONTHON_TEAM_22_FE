@@ -99,7 +99,7 @@ const apiRequest = async (url, options = {}) => {
 
 // 게시글 상세 조회
 export const getPost = (id) => {
-  return apiRequest(`/posts/${id}`);
+  return apiRequest(`/api/v1/posts/${id}`);
 };
 
 // 게시글 수정
@@ -114,7 +114,7 @@ export const updatePost = (id, postData) => {
     requestBody.rating = postData.rating;
   }
 
-  return apiRequest(`/posts/${id}`, {
+  return apiRequest(`/api/v1/posts/${id}`, {
     method: 'PUT',
     data: requestBody,
   });
@@ -122,7 +122,7 @@ export const updatePost = (id, postData) => {
 
 // 게시글 삭제
 export const deletePost = (id) => {
-  return apiRequest(`/posts/${id}`, {
+  return apiRequest(`/api/v1/posts/${id}`, {
     method: 'DELETE',
   });
 };
@@ -162,7 +162,7 @@ export const getPosts = (filters = {}) => {
   }
 
   const queryString = params.toString();
-  const url = queryString ? `/posts?${queryString}` : '/posts';
+  const url = queryString ? `/api/v1/posts?${queryString}` : '/api/v1/posts';
 
   return apiRequest(url);
 };
@@ -187,7 +187,7 @@ export const createPost = (postData) => {
     requestBody.rating = postData.rating;
   }
 
-  return apiRequest('/posts', {
+  return apiRequest('/api/v1/posts', {
     method: 'POST',
     data: requestBody,
   });
@@ -195,14 +195,14 @@ export const createPost = (postData) => {
 
 // 게시글 좋아요
 export const likePost = (id) => {
-  return apiRequest(`/posts/${id}/like`, {
+  return apiRequest(`/api/v1/posts/${id}/like`, {
     method: 'POST',
   });
 };
 
 // 게시글 좋아요 취소
 export const unlikePost = (id) => {
-  return apiRequest(`/posts/${id}/like`, {
+  return apiRequest(`/api/v1/posts/${id}/like`, {
     method: 'DELETE',
   });
 };
