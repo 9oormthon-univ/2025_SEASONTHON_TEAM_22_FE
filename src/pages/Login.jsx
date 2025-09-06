@@ -35,7 +35,6 @@ export default function Login() {
       
       // 로그인 성공
       if (response.data && response.data.success) {
-        localStorage.setItem("jwtToken", response.data.data.token); 
         login(response.data.data.member)
         toast.success(`${response.data.data.member.nickname}님, 환영합니다!`)
         navigate('/')
