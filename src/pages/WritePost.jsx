@@ -39,6 +39,7 @@ export default function WritePost() {
           rating
         }
         
+        console.log('후기 작성 시도:', reviewData)
         await createPost(reviewData)
         toast.success('후기가 성공적으로 작성되었습니다!')
         navigate('/community')
@@ -50,6 +51,7 @@ export default function WritePost() {
           content
         }
         
+        console.log('게시글 작성 시도:', postData)
         await createPost(postData)
         toast.success('게시글이 성공적으로 작성되었습니다!')
         navigate('/community')

@@ -104,5 +104,6 @@ export default {
   createComment,
   updateComment,
   deleteComment,
-  getMyComments
+  getMyComments,
+  getComment
 }

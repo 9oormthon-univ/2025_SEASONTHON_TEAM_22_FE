@@ -119,7 +119,14 @@ export const getPosts = async (activityId, memberId = {}) => {
 };
 
 // 게시글 생성
-export const createPost = (memberId, postData) => {
+export const createPost = async (postData, memberId) => {
+  // memberId가 없으면 현재 사용자 정보를 가져와서 사용
+  if (!memberId) {
+    const { getMyInfo } = await import('./memberApi')
+    const currentUser = await getMyInfo()
+    memberId = currentUser.id
+  }
+
   const requestBody = {
     postCategory: postData.postCategory,
     title: postData.title,
