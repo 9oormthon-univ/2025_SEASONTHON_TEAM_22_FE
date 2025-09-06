@@ -3,7 +3,6 @@ import styled from 'styled-components'
 import PageHeader from '../components/PageHeader'
 import { Star, ChevronDown } from 'lucide-react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { createPost } from '../services/postApi'
 import { toast } from 'sonner'
 
 export default function WritePost() {
@@ -23,36 +22,85 @@ export default function WritePost() {
   const isReview = mode === 'review' || category === '후기'
   const disabled = !title.trim() || !content.trim() || (isReview && rating === 0)
 
-  const handleSubmit = async () => {
+  const handleSubmit = () => {
     if (disabled || isSubmitting) return
     
     setIsSubmitting(true)
     
     try {
+      // 로컬스토리지에서 기존 데이터 가져오기
+      const existingPosts = JSON.parse(localStorage.getItem('communityPosts') || '[]')
+      const existingReviews = JSON.parse(localStorage.getItem('communityReviews') || '[]')
+      const myPosts = JSON.parse(localStorage.getItem('myPosts') || '[]')
+      const myReviews = JSON.parse(localStorage.getItem('myReviews') || '[]')
+      
       if (isReview) {
-        // 후기 작성 - API 호출
-        const reviewData = {
-          postCategory: 'REVIEW',
+        // 후기 작성 - 로컬스토리지에 저장
+        const newReview = {
+          id: Date.now(), // 간단한 ID 생성
           title,
           content,
-          activityId: 1, // 기본값, 실제로는 선택된 활동 ID를 사용해야 함
-          rating
+          rating,
+          subtitle: '익명',
+          timeAgo: '방금 전',
+          createdAt: new Date().toISOString()
         }
         
-        console.log('후기 작성 시도:', reviewData)
-        await createPost(reviewData)
+        // MyPosts용 후기 데이터 구조
+        const newMyReview = {
+          id: Date.now(),
+          title,
+          content,
+          postCategory: 'REVIEW',
+          activityId: 1,
+          activityTitle: '활동 후기',
+          rating,
+          createdAt: new Date().toISOString(),
+          likeCount: 0,
+          commentCount: 0
+        }
+        
+        const updatedReviews = [newReview, ...existingReviews]
+        localStorage.setItem('communityReviews', JSON.stringify(updatedReviews))
+        
+        // 내가 쓴 후기에도 추가 (MyPosts 구조에 맞게)
+        const updatedMyReviews = [newMyReview, ...myReviews]
+        localStorage.setItem('myReviews', JSON.stringify(updatedMyReviews))
+        
         toast.success('후기가 성공적으로 작성되었습니다!')
         navigate('/community')
       } else {
-        // 게시글 작성 - API 호출
-        const postData = {
-          postCategory: 'POST',
+        // 게시글 작성 - 로컬스토리지에 저장
+        const newPost = {
+          id: Date.now(), // 간단한 ID 생성
           title,
-          content
+          content,
+          author: '익명',
+          timeAgo: '방금 전',
+          isLiked: false,
+          likes: 0,
+          comments: 0,
+          createdAt: new Date().toISOString()
         }
         
-        console.log('게시글 작성 시도:', postData)
-        await createPost(postData)
+        // MyPosts용 데이터 구조
+        const newMyPost = {
+          id: Date.now(),
+          title,
+          content,
+          postCategory: 'POST',
+          createdAt: new Date().toISOString(),
+          likeCount: 0,
+          commentCount: 0
+        }
+        
+        const updatedPosts = [newPost, ...existingPosts]
+        localStorage.setItem('communityPosts', JSON.stringify(updatedPosts))
+        
+        // 내가 쓴 글에도 추가 (MyPosts 구조에 맞게)
+        const updatedMyPosts = [newMyPost, ...myPosts]
+        localStorage.setItem('myPosts', JSON.stringify(updatedMyPosts))
+        
         toast.success('게시글이 성공적으로 작성되었습니다!')
         navigate('/community')
       }

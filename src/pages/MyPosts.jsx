@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom'
 import { ChevronLeft, Home, Star, Users, Brain, Heart, MessageCircle } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { toast } from 'sonner'
-import axios from 'axios'
 import styled from 'styled-components'
 
 export default function MyPosts() {
@@ -94,59 +93,47 @@ export default function MyPosts() {
     }
   }, [currentUser, isLoading, navigate])
 
-  // 내가 쓴 게시글 조회
-  const fetchMyPosts = async () => {
-    if (!currentUser?.id) return
+  // 로컬스토리지에서 내가 쓴 글/후기 데이터 로드
+  useEffect(() => {
+    const loadMyData = () => {
+      try {
+        // 로컬스토리지에서 내가 쓴 게시글 로드
+        const savedMyPosts = JSON.parse(localStorage.getItem('myPosts') || '[]')
+        if (savedMyPosts.length > 0) {
+          setMyPosts(savedMyPosts)
+        }
+        // 로컬스토리지에 데이터가 없으면 더미 데이터 사용 (이미 useState에서 초기화됨)
+        
+        // 로컬스토리지에서 내가 쓴 후기 로드
+        const savedMyReviews = JSON.parse(localStorage.getItem('myReviews') || '[]')
+        if (savedMyReviews.length > 0) {
+          setMyReviews(savedMyReviews)
+        }
+        // 로컬스토리지에 데이터가 없으면 더미 데이터 사용 (이미 useState에서 초기화됨)
+      } catch (error) {
+        console.log('로컬스토리지에서 내 데이터 로드 실패, 기본 더미 데이터 사용:', error.message)
+      }
+    }
     
+    loadMyData()
+  }, [])
+
+  // 로컬스토리지에서 내가 쓴 게시글 조회 (더 이상 API 호출하지 않음)
+  const fetchMyPosts = () => {
     try {
-      setDataLoading(true)
-      const response = await axios.get(`/api/v1/posts/my?page=0&size=20`)
-      if (response.data && response.data.success) {
-        setMyPosts(response.data.data?.content || [])
+      const savedMyPosts = JSON.parse(localStorage.getItem('myPosts') || '[]')
+      if (savedMyPosts.length > 0) {
+        setMyPosts(savedMyPosts)
       }
     } catch (error) {
       console.error('내 게시글 조회 실패:', error)
-      toast.error('게시글을 불러오는데 실패했습니다.')
-      // API 실패 시 더미 데이터 사용
-      setMyPosts([
-        {
-          id: 1,
-          title: '오늘의 감정 기록',
-          content: '오늘은 정말 좋은 하루였어요. 친구들과 만나서 즐거운 시간을 보냈습니다.',
-          postCategory: 'POST',
-          createdAt: '2024-08-20T10:00:00.000Z',
-          likeCount: 5,
-          commentCount: 3
-        },
-        {
-          id: 2,
-          title: '마음 훈련 후기',
-          content: '명상 프로그램을 통해 마음이 많이 편안해졌어요. 추천합니다!',
-          postCategory: 'POST',
-          createdAt: '2024-08-18T14:30:00.000Z',
-          likeCount: 8,
-          commentCount: 2
-        }
-      ])
-    } finally {
-      setDataLoading(false)
     }
   }
 
-  // 내가 쓴 댓글 조회
-  const fetchMyComments = async () => {
-    if (!currentUser?.id) return
-    
+  // 로컬스토리지에서 내가 쓴 댓글 조회 (더 이상 API 호출하지 않음)
+  const fetchMyComments = () => {
     try {
-      setDataLoading(true)
-      const response = await axios.get(`/api/v1/comments/my?page=0&size=20`)
-      if (response.data && response.data.success) {
-        setMyComments(response.data.data?.content || [])
-      }
-    } catch (error) {
-      console.error('내 댓글 조회 실패:', error)
-      toast.error('댓글을 불러오는데 실패했습니다.')
-      // API 실패 시 더미 데이터 사용
+      // 댓글은 더미 데이터만 사용
       setMyComments([
         {
           id: 1,
@@ -173,53 +160,20 @@ export default function MyPosts() {
           likeCount: 0
         }
       ])
-    } finally {
-      setDataLoading(false)
+    } catch (error) {
+      console.error('내 댓글 조회 실패:', error)
     }
   }
 
-  // 내가 쓴 후기 조회
-  const fetchMyReviews = async () => {
-    if (!currentUser?.id) return
-    
+  // 로컬스토리지에서 내가 쓴 후기 조회 (더 이상 API 호출하지 않음)
+  const fetchMyReviews = () => {
     try {
-      setDataLoading(true)
-      const response = await axios.get(`/api/v1/posts/my/reviews?page=0&size=20`)
-      if (response.data && response.data.success) {
-        setMyReviews(response.data.data?.content || [])
+      const savedMyReviews = JSON.parse(localStorage.getItem('myReviews') || '[]')
+      if (savedMyReviews.length > 0) {
+        setMyReviews(savedMyReviews)
       }
     } catch (error) {
       console.error('내 후기 조회 실패:', error)
-      toast.error('후기를 불러오는데 실패했습니다.')
-      // API 실패 시 더미 데이터 사용
-      setMyReviews([
-        {
-          id: 1,
-          title: '청년직업역량개발 프로그램 후기',
-          content: '정말 유익한 프로그램이었어요. 디자인에 대한 새로운 시각을 얻었습니다.',
-          postCategory: 'REVIEW',
-          activityId: 1,
-          activityTitle: '청년직업역량개발 [도전! 디자이너!] 프로그램',
-          rating: 5,
-          createdAt: '2024-08-15T09:00:00.000Z',
-          likeCount: 12,
-          commentCount: 5
-        },
-        {
-          id: 2,
-          title: '마음 성장 보드게임 후기',
-          content: '보드게임을 통해 자신감이 많이 향상되었어요. 추천합니다!',
-          postCategory: 'REVIEW',
-          activityId: 2,
-          activityTitle: '자신감UP! 관계소통UP! 마음 성장 보드게임',
-          rating: 4,
-          createdAt: '2024-08-10T16:00:00.000Z',
-          likeCount: 8,
-          commentCount: 3
-        }
-      ])
-    } finally {
-      setDataLoading(false)
     }
   }
 
@@ -241,6 +195,19 @@ export default function MyPosts() {
       }
     }
   }, [activeContentTab, currentUser?.id])
+
+  // 페이지 포커스 시 데이터 새로고침 (새로 작성한 글이 반영되도록)
+  useEffect(() => {
+    const handleFocus = () => {
+      if (currentUser?.id) {
+        fetchMyPosts()
+        fetchMyReviews()
+      }
+    }
+
+    window.addEventListener('focus', handleFocus)
+    return () => window.removeEventListener('focus', handleFocus)
+  }, [currentUser?.id])
 
   const navItems = [
     { label: '홈', active: false, icon: Home },

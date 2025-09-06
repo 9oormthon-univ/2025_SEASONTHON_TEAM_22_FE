@@ -1,7 +1,6 @@
 import styled from 'styled-components'
 import { useState, useEffect } from 'react'
 import PageHeader from '../components/PageHeader'
-import { getEmotions, getMonthlyEmotionStats } from '../services/emotionApi'
 import { useAuth } from '../contexts/AuthContext'
 
 export default function MoodRecord() {
@@ -13,96 +12,117 @@ export default function MoodRecord() {
   const [statsLoading, setStatsLoading] = useState(true)
   const [selectedMonth, setSelectedMonth] = useState('current') // 'current' 또는 'previous'
 
-  // API에서 감정 기록 데이터 가져오기
+  // 더미 데이터로 감정 기록 설정
   useEffect(() => {
-    const fetchEmotions = async () => {
-      try {
-        setLoading(true)
-        const response = await getEmotions({ page: 0, size: 50, sort: ['createdAt,desc'] })
-        setEmotions(response.content || [])
-        setError(null)
-      } catch (err) {
-        console.error('감정 기록 로드 실패:', err)
-        setError('감정 기록을 불러오는데 실패했습니다.')
-        // API 실패 시 기존 더미 데이터 사용
-        setEmotions([
-          {
-            id: 1,
-            emotionState: 'SOSO',
-            emotionText: '주말이라 좋았어요',
-            createdAt: '2024-07-29T10:00:00.000Z'
-          },
-          {
-            id: 2,
-            emotionState: 'SOSO',
-            emotionText: '그냥 평범한 하루였어요',
-            createdAt: '2024-07-28T10:00:00.000Z'
-          },
-          {
-            id: 3,
-            emotionState: 'HAPPY',
-            emotionText: '친구들과 만났어요',
-            createdAt: '2024-07-27T10:00:00.000Z'
-          },
-          {
-            id: 4,
-            emotionState: 'SAD',
-            emotionText: '비가 와서 기분이 다운되었어요',
-            createdAt: '2024-07-15T10:00:00.000Z'
-          },
-          {
-            id: 5,
-            emotionState: 'ANGER',
-            emotionText: '교통이 너무 막혔어요',
-            createdAt: '2024-07-10T10:00:00.000Z'
-          },
-          {
-            id: 6,
-            emotionState: 'HAPPY',
-            emotionText: '맛있는 걸 먹었어요',
-            createdAt: '2024-07-08T10:00:00.000Z'
-          },
-          {
-            id: 7,
-            emotionState: 'SOSO',
-            emotionText: '무난한 하루',
-            createdAt: '2024-07-06T10:00:00.000Z'
-          }
-        ])
-      } finally {
-        setLoading(false)
+    setLoading(true)
+    // 더미 데이터 직접 설정
+    setEmotions([
+      {
+        id: 1,
+        emotionState: 'HAPPY',
+        emotionText: '구름톤이라 좋았어요',
+        createdAt: '2025-09-07T10:00:00.000Z'
+      },
+      {
+        id: 2,
+        emotionState: 'SOSO',
+        emotionText: '그냥 평범한 하루였어요',
+        createdAt: '2024-09-04T10:00:00.000Z'
+      },
+      {
+        id: 3,
+        emotionState: 'HAPPY',
+        emotionText: '친구들과 만났어요',
+        createdAt: '2024-09-01T10:00:00.000Z'
+      },
+      {
+        id: 4,
+        emotionState: 'SAD',
+        emotionText: '비가 와서 기분이 다운되었어요',
+        createdAt: '2024-08-29T10:00:00.000Z'
+      },
+      {
+        id: 5,
+        emotionState: 'ANGER',
+        emotionText: '교통이 너무 막혔어요',
+        createdAt: '2024-08-21T10:00:00.000Z'
+      },
+      {
+        id: 6,
+        emotionState: 'HAPPY',
+        emotionText: '맛있는 걸 먹었어요',
+        createdAt: '2024-08-20T10:00:00.000Z'
+      },
+      {
+        id: 7,
+        emotionState: 'SOSO',
+        emotionText: '무난한 하루',
+        createdAt: '2024-08-16T10:00:00.000Z'
       }
-    }
-
-    fetchEmotions()
+    ])
+    setError(null)
+    setLoading(false)
   }, [])
 
-  // 월간 감정 통계 데이터 가져오기
-  useEffect(() => {
-    const fetchMonthlyStats = async () => {
-      if (!currentUser?.id) return
-      
-      try {
-        setStatsLoading(true)
-        const currentDate = new Date()
-        const year = currentDate.getFullYear()
-        const month = currentDate.getMonth() + 1 // 1-12월
-        
-        console.log(`현재 년월: ${year}년 ${month}월`)
-        
-        const response = await getMonthlyEmotionStats(currentUser.id, year, month)
-        setMonthlyStats(response.data || [])
-      } catch (err) {
-        console.error('월간 감정 통계 로드 실패:', err)
-        // API 실패 시 빈 배열로 초기화
-        setMonthlyStats([])
-      } finally {
-        setStatsLoading(false)
-      }
-    }
 
-    fetchMonthlyStats()
-  }, [currentUser?.id])
+  // 더미 데이터로 월간 통계 설정
+  useEffect(() => {
+    setStatsLoading(true)
+    // 더미 데이터 직접 설정
+    setMonthlyStats([
+      {
+        week: 1,
+        percentages: {
+          "행복": 30,
+          "보통": 40,
+          "슬픔": 20,
+          "화남": 5,
+          "걱정": 5
+        }
+      },
+      {
+        week: 2,
+        percentages: {
+          "행복": 25,
+          "보통": 35,
+          "슬픔": 25,
+          "화남": 10,
+          "걱정": 5
+        }
+      },
+      {
+        week: 3,
+        percentages: {
+          "행복": 40,
+          "보통": 30,
+          "슬픔": 15,
+          "화남": 10,
+          "걱정": 5
+        }
+      },
+      {
+        week: 4,
+        percentages: {
+          "행복": 35,
+          "보통": 25,
+          "슬픔": 20,
+          "화남": 15,
+          "걱정": 5
+        }
+      },
+      {
+        week: 5,
+        percentages: {
+          "행복": 20,
+          "보통": 30,
+          "슬픔": 25,
+          "화남": 15,
+          "걱정": 10
+        }
+      }
+    ])
+    setStatsLoading(false)
+  }, [])
 
   // API 데이터를 차트 형식으로 변환하는 함수
   const convertApiDataToChartFormat = (apiData) => {
@@ -189,13 +209,6 @@ export default function MoodRecord() {
       }
     }
   ]
-
-  // 선택된 월에 따라 데이터 결정
-  const weeklyMoodData = selectedMonth === 'current' 
-    ? (monthlyStats.length > 0 
-        ? convertApiDataToChartFormat(monthlyStats)
-        : convertApiDataToChartFormat(dummyMonthlyData))
-    : convertApiDataToChartFormat(dummyMonthlyData) // 이전 월은 항상 더미 데이터
 
   const allMonthlyMoodData = [
     { 
@@ -284,28 +297,15 @@ export default function MoodRecord() {
     }
   ]
 
-  // API 데이터와 기존 더미 데이터 병합
+  // 더미 데이터로 최근 감정 기록 반환
   const getRecentRecords = () => {
-    if (emotions.length > 0) {
-      // API 데이터를 기존 형식으로 변환
-      return emotions.slice(0, 7).map(emotion => ({
-        emoji: getMoodEmoji(emotion.emotionState),
-        mood: getMoodText(emotion.emotionState),
-        date: formatDate(emotion.createdAt),
-        reason: emotion.emotionText || '감정 기록'
-      }))
-    }
-    
-    // API 데이터가 없으면 기존 더미 데이터 사용
-    return [
-      { emoji: '😐', mood: '보통이에요', date: '7월 29일', reason: '주말이라 좋았어요' },
-      { emoji: '😐', mood: '보통이에요', date: '7월 28일', reason: '그냥 평범한 하루였어요' },
-      { emoji: '😊', mood: '행복해요', date: '7월 27일', reason: '친구들과 만났어요' },
-      { emoji: '😢', mood: '슬퍼요', date: '7월 15일', reason: '비가 와서 기분이 다운되었어요' },
-      { emoji: '😠', mood: '화나요', date: '7월 10일', reason: '교통이 너무 막혔어요' },
-      { emoji: '😊', mood: '행복해요', date: '7월 08일', reason: '맛있는 걸 먹었어요' },
-      { emoji: '😐', mood: '보통이에요', date: '7월 06일', reason: '무난한 하루' }
-    ]
+    // 더미 데이터를 기존 형식으로 변환
+    return emotions.slice(0, 7).map(emotion => ({
+      emoji: getMoodEmoji(emotion.emotionState),
+      mood: getMoodText(emotion.emotionState),
+      date: formatDate(emotion.createdAt),
+      reason: emotion.emotionText || '감정 기록'
+    }))
   }
 
   // 감정 타입에 따른 이모지 반환
@@ -388,9 +388,13 @@ export default function MoodRecord() {
   const currentMonthIndex = 1
   const currentMonthData = allMonthlyMoodData[currentMonthIndex]
 
-  // 로컬스토리지 사용 제거 - API 데이터만 사용
-  const base = monthlyRecords[currentMonthIndex] || []
-  const recentRecords = [...base].slice(0, 7)
+  // 선택된 월에 따라 데이터 결정 (모두 더미 데이터 사용)
+  const weeklyMoodData = selectedMonth === 'current' 
+    ? convertApiDataToChartFormat(monthlyStats)
+    : convertApiDataToChartFormat(dummyMonthlyData) // 이전 월은 항상 더미 데이터
+
+  // 더미 데이터 사용
+  const recentRecords = getRecentRecords()
   const globalMaxCount = 100
 
   const moodLabels = [
@@ -412,13 +416,6 @@ export default function MoodRecord() {
         </LoadingMessage>
       )}
       
-      {/* 에러 상태 표시 */}
-      {error && (
-        <ErrorMessage>
-          {error}
-        </ErrorMessage>
-      )}
-
       <Card>
         <CardBody>
           {/* 월 선택 버튼 */}
@@ -657,5 +654,3 @@ const ErrorMessage = styled.div`
   border-radius: 0.8rem;
   margin: 1rem;
 `
-
-

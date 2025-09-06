@@ -1,6 +1,4 @@
 import styled from 'styled-components'
-import { IoNotifications } from 'react-icons/io5'
-import { IoNotificationsOutline } from 'react-icons/io5'
 import { X, User } from 'lucide-react'
 import PageHeader from '../components/PageHeader'
 import { NotificationService } from '../services/notificationService.jsx'
@@ -189,7 +187,12 @@ export default function MyPage() {
             </AlertInfo>
             <ToggleSwitch 
               $active={notificationSettings.emotionRecord} 
-              onClick={() => toggleNotificationSetting('emotionRecord')}
+              onClick={() => {
+                toggleNotificationSetting('emotionRecord')
+                if (!notificationSettings.emotionRecord) {
+                  NotificationService.showTestEmotionNotification()
+                }
+              }}
             />
           </AlertItem>
           <AlertItem>
@@ -199,29 +202,17 @@ export default function MyPage() {
             </AlertInfo>
             <ToggleSwitch 
               $active={notificationSettings.favoriteActivity} 
-              onClick={() => toggleNotificationSetting('favoriteActivity')}
+              onClick={() => {
+                toggleNotificationSetting('favoriteActivity')
+                if (!notificationSettings.favoriteActivity) {
+                  NotificationService.showTestFavoriteNotification()
+                }
+              }}
             />
           </AlertItem>
         </AlertList>
       </Section>
 
-      <Section>
-        <SectionTitle>알림 테스트</SectionTitle>
-        <TestList>
-          <TestItem onClick={()=> NotificationService.showTestEmotionNotification()}>
-            <TestIcon color="#8A79BA">
-              <IoNotifications />
-            </TestIcon>
-            <TestText>감정 기록 알림 테스트</TestText>
-          </TestItem>
-          <TestItem onClick={()=> NotificationService.showTestFavoriteNotification()}>
-            <TestIcon color="#FF6B35">
-              <IoNotificationsOutline />
-            </TestIcon>
-            <TestText>찜한 활동 알림 테스트</TestText>
-          </TestItem>
-        </TestList>
-      </Section>
 
       <BottomOptions>
         <LogoutButton onClick={handleLogoutClick}>로그아웃</LogoutButton>
@@ -493,31 +484,6 @@ const ToggleSwitch = styled.div`
   }
 `
 
-const TestList = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 0.8rem;
-`
-
-const TestItem = styled.button`
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 0.8rem;
-  padding: 1.2rem;
-  display: flex;
-  align-items: center;
-  gap: 1.2rem;
-  text-align: left;
-  font-size: 1.6rem;
-  color: var(--foreground);
-`
-
-const TestIcon = styled.div`
-  color: ${props => props.color};
-  font-size: 1.8rem;
-`
-
-const TestText = styled.span``
 
 const BottomOptions = styled.div`
   display: flex;

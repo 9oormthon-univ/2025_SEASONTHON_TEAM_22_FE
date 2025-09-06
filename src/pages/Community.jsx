@@ -4,7 +4,6 @@ import { useNavigate } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import Tabs from '../components/Tabs'
 import { Heart as HeartIcon } from 'lucide-react'
-import { getPosts, likePost, unlikePost } from '../services/postApi'
 import { toast } from 'sonner'
 
 export default function Community() {
@@ -21,7 +20,7 @@ export default function Community() {
     { id: 3, title: '청년 D.I.Y 자조모임', subtitle: '미르미3', rating: 4, timeAgo: '2024-05-27', content: '똑똑아라 힘들었어요. 할 편 너희랑 그래도 결원 할 수 있었죠.' }
   ])
 
-  const toggleLike = async (id, e) => {
+  const toggleLike = (id, e) => {
     e.stopPropagation() // 카드 클릭 이벤트 방지
     
     try {
@@ -29,16 +28,20 @@ export default function Community() {
       if (!post) return
       
       if (post.isLiked) {
-        await unlikePost(id)
-        setPosts(prev => prev.map(p => 
+        // 로컬스토리지에서 좋아요 취소
+        const updatedPosts = posts.map(p => 
           p.id === id ? { ...p, isLiked: false, likes: Math.max(0, (p.likes || 0) - 1) } : p
-        ))
+        )
+        setPosts(updatedPosts)
+        localStorage.setItem('communityPosts', JSON.stringify(updatedPosts))
         toast.success('좋아요를 취소했습니다.')
       } else {
-        await likePost(id)
-        setPosts(prev => prev.map(p => 
+        // 로컬스토리지에서 좋아요 추가
+        const updatedPosts = posts.map(p => 
           p.id === id ? { ...p, isLiked: true, likes: (p.likes || 0) + 1 } : p
-        ))
+        )
+        setPosts(updatedPosts)
+        localStorage.setItem('communityPosts', JSON.stringify(updatedPosts))
         toast.success('좋아요를 눌렀습니다!')
       }
     } catch (error) {
@@ -55,38 +58,35 @@ export default function Community() {
     return arr.join(' ')
   }
 
-  // API에서 게시글/후기 데이터 로드
+  // 로컬스토리지에서 게시글/후기 데이터 로드
   useEffect(() => {
-    const fetchData = async () => {
+    const loadData = () => {
       try {
-        // 게시글 데이터 로드
-        const postsData = await getPosts({ category: 'POST', page: 0, size: 20 })
-        if (postsData.content) {
-          setPosts(postsData.content.map(post => ({
-            ...post,
-            isLiked: false, // 기본값, 실제로는 API에서 받아와야 함
-            comments: 0 // 기본값, 실제로는 API에서 받아와야 함
-          })))
+        // 로컬스토리지에서 게시글 데이터 로드
+        const savedPosts = JSON.parse(localStorage.getItem('communityPosts') || '[]')
+        if (savedPosts.length > 0) {
+          // 로컬스토리지 데이터와 더미 데이터 합치기 (로컬스토리지 데이터가 위에)
+          setPosts([...savedPosts, ...posts])
+        } else {
+          // 초기 더미 데이터를 로컬스토리지에 저장
+          localStorage.setItem('communityPosts', JSON.stringify(posts))
         }
         
-        // 후기 데이터 로드
-        const reviewsData = await getPosts({ category: 'REVIEW', page: 0, size: 20 })
-        if (reviewsData.content) {
-          setReviews(reviewsData.content.map(review => ({
-            ...review,
-            subtitle: '익명', // 기본값
-            timeAgo: '방금 전' // 기본값, 실제로는 API에서 받아와야 함
-          })))
+        // 로컬스토리지에서 후기 데이터 로드
+        const savedReviews = JSON.parse(localStorage.getItem('communityReviews') || '[]')
+        if (savedReviews.length > 0) {
+          // 로컬스토리지 데이터와 더미 데이터 합치기 (로컬스토리지 데이터가 위에)
+          setReviews([...savedReviews, ...reviews])
+        } else {
+          // 초기 더미 데이터를 로컬스토리지에 저장
+          localStorage.setItem('communityReviews', JSON.stringify(reviews))
         }
       } catch (error) {
-        console.log('API에서 데이터 로드 실패, 로컬 데이터 사용:', error.message)
-        
-        // 로컬스토리지 사용 제거 - API 데이터만 사용
+        console.log('로컬스토리지에서 데이터 로드 실패, 기본 더미 데이터 사용:', error.message)
       }
     }
     
-    fetchData()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    loadData()
   }, [])
 
   return (
