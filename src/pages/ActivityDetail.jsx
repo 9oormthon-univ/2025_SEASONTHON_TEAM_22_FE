@@ -126,8 +126,7 @@ export default function ActivityDetail() {
       </Section>
 
       <ApplyButton
-        disabled={activity.recruitStatus === 'CLOSED' || isApplied(activity.id)}
-        onClick={handleApply}
+        onClick={() => window.open('https://docs.google.com/forms/d/1hlkND-OMIie_-rsW9jwW3cjNG-6OcjCXzjdBXjR7oQI/viewform?edit_requested=true', '_blank')}
       >
         {activity.recruitStatus === 'CLOSED' ? '마감' : 
          isApplied(activity.id) ? '신청 완료' : '신청하기'}

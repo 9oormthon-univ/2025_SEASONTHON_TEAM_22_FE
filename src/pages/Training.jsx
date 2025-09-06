@@ -104,6 +104,12 @@ export default function Training() {
       return;
     }
 
+    // 6번 질문은 API 연동하지 않고 바로 완료 처리
+    if (current.id === 6) {
+      console.log('6번 질문 완료 - API 연동 없이 완료 처리');
+      return;
+    }
+
     try {
       console.log('답변 저장 시도:', {
         memberId: currentUser.id,

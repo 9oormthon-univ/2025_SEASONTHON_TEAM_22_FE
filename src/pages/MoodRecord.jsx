@@ -25,7 +25,50 @@ export default function MoodRecord() {
         console.error('감정 기록 로드 실패:', err)
         setError('감정 기록을 불러오는데 실패했습니다.')
         // API 실패 시 기존 더미 데이터 사용
-        setEmotions([])
+        setEmotions([
+          {
+            id: 1,
+            emotionState: 'SOSO',
+            emotionText: '주말이라 좋았어요',
+            createdAt: '2024-07-29T10:00:00.000Z'
+          },
+          {
+            id: 2,
+            emotionState: 'SOSO',
+            emotionText: '그냥 평범한 하루였어요',
+            createdAt: '2024-07-28T10:00:00.000Z'
+          },
+          {
+            id: 3,
+            emotionState: 'HAPPY',
+            emotionText: '친구들과 만났어요',
+            createdAt: '2024-07-27T10:00:00.000Z'
+          },
+          {
+            id: 4,
+            emotionState: 'SAD',
+            emotionText: '비가 와서 기분이 다운되었어요',
+            createdAt: '2024-07-15T10:00:00.000Z'
+          },
+          {
+            id: 5,
+            emotionState: 'ANGER',
+            emotionText: '교통이 너무 막혔어요',
+            createdAt: '2024-07-10T10:00:00.000Z'
+          },
+          {
+            id: 6,
+            emotionState: 'HAPPY',
+            emotionText: '맛있는 걸 먹었어요',
+            createdAt: '2024-07-08T10:00:00.000Z'
+          },
+          {
+            id: 7,
+            emotionState: 'SOSO',
+            emotionText: '무난한 하루',
+            createdAt: '2024-07-06T10:00:00.000Z'
+          }
+        ])
       } finally {
         setLoading(false)
       }

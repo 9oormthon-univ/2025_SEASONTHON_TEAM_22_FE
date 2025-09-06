@@ -11,10 +11,79 @@ export default function MyPosts() {
   const { currentUser, isLoading } = useAuth()
   const [activeContentTab, setActiveContentTab] = useState('게시글')
   
-  // API 데이터 상태
-  const [myPosts, setMyPosts] = useState([])
-  const [myComments, setMyComments] = useState([])
-  const [myReviews, setMyReviews] = useState([])
+  // API 데이터 상태 (초기 더미 데이터 포함)
+  const [myPosts, setMyPosts] = useState([
+    {
+      id: 1,
+      title: '오늘의 감정 기록',
+      content: '오늘은 정말 좋은 하루였어요. 친구들과 만나서 즐거운 시간을 보냈습니다.',
+      postCategory: 'POST',
+      createdAt: '2024-08-20T10:00:00.000Z',
+      likeCount: 5,
+      commentCount: 3
+    },
+    {
+      id: 2,
+      title: '마음 훈련 후기',
+      content: '명상 프로그램을 통해 마음이 많이 편안해졌어요. 추천합니다!',
+      postCategory: 'POST',
+      createdAt: '2024-08-18T14:30:00.000Z',
+      likeCount: 8,
+      commentCount: 2
+    }
+  ])
+  const [myComments, setMyComments] = useState([
+    {
+      id: 1,
+      content: '정말 좋은 글이네요! 공감합니다.',
+      postId: 1,
+      postTitle: '오늘의 감정 기록',
+      createdAt: '2024-08-20T11:00:00.000Z',
+      likeCount: 2
+    },
+    {
+      id: 2,
+      content: '저도 비슷한 경험이 있어요. 힘내세요!',
+      postId: 2,
+      postTitle: '마음 훈련 후기',
+      createdAt: '2024-08-18T15:00:00.000Z',
+      likeCount: 1
+    },
+    {
+      id: 3,
+      content: '추천해주신 프로그램 궁금하네요.',
+      postId: 2,
+      postTitle: '마음 훈련 후기',
+      createdAt: '2024-08-18T16:30:00.000Z',
+      likeCount: 0
+    }
+  ])
+  const [myReviews, setMyReviews] = useState([
+    {
+      id: 1,
+      title: '청년직업역량개발 프로그램 후기',
+      content: '정말 유익한 프로그램이었어요. 디자인에 대한 새로운 시각을 얻었습니다.',
+      postCategory: 'REVIEW',
+      activityId: 1,
+      activityTitle: '청년직업역량개발 [도전! 디자이너!] 프로그램',
+      rating: 5,
+      createdAt: '2024-08-15T09:00:00.000Z',
+      likeCount: 12,
+      commentCount: 5
+    },
+    {
+      id: 2,
+      title: '마음 성장 보드게임 후기',
+      content: '보드게임을 통해 자신감이 많이 향상되었어요. 추천합니다!',
+      postCategory: 'REVIEW',
+      activityId: 2,
+      activityTitle: '자신감UP! 관계소통UP! 마음 성장 보드게임',
+      rating: 4,
+      createdAt: '2024-08-10T16:00:00.000Z',
+      likeCount: 8,
+      commentCount: 3
+    }
+  ])
   const [dataLoading, setDataLoading] = useState(false)
 
   // 사용자 정보가 없으면 로그인 페이지로 리다이렉트
@@ -38,6 +107,27 @@ export default function MyPosts() {
     } catch (error) {
       console.error('내 게시글 조회 실패:', error)
       toast.error('게시글을 불러오는데 실패했습니다.')
+      // API 실패 시 더미 데이터 사용
+      setMyPosts([
+        {
+          id: 1,
+          title: '오늘의 감정 기록',
+          content: '오늘은 정말 좋은 하루였어요. 친구들과 만나서 즐거운 시간을 보냈습니다.',
+          postCategory: 'POST',
+          createdAt: '2024-08-20T10:00:00.000Z',
+          likeCount: 5,
+          commentCount: 3
+        },
+        {
+          id: 2,
+          title: '마음 훈련 후기',
+          content: '명상 프로그램을 통해 마음이 많이 편안해졌어요. 추천합니다!',
+          postCategory: 'POST',
+          createdAt: '2024-08-18T14:30:00.000Z',
+          likeCount: 8,
+          commentCount: 2
+        }
+      ])
     } finally {
       setDataLoading(false)
     }
@@ -56,6 +146,33 @@ export default function MyPosts() {
     } catch (error) {
       console.error('내 댓글 조회 실패:', error)
       toast.error('댓글을 불러오는데 실패했습니다.')
+      // API 실패 시 더미 데이터 사용
+      setMyComments([
+        {
+          id: 1,
+          content: '정말 좋은 글이네요! 공감합니다.',
+          postId: 1,
+          postTitle: '오늘의 감정 기록',
+          createdAt: '2024-08-20T11:00:00.000Z',
+          likeCount: 2
+        },
+        {
+          id: 2,
+          content: '저도 비슷한 경험이 있어요. 힘내세요!',
+          postId: 2,
+          postTitle: '마음 훈련 후기',
+          createdAt: '2024-08-18T15:00:00.000Z',
+          likeCount: 1
+        },
+        {
+          id: 3,
+          content: '추천해주신 프로그램 궁금하네요.',
+          postId: 2,
+          postTitle: '마음 훈련 후기',
+          createdAt: '2024-08-18T16:30:00.000Z',
+          likeCount: 0
+        }
+      ])
     } finally {
       setDataLoading(false)
     }
@@ -74,6 +191,33 @@ export default function MyPosts() {
     } catch (error) {
       console.error('내 후기 조회 실패:', error)
       toast.error('후기를 불러오는데 실패했습니다.')
+      // API 실패 시 더미 데이터 사용
+      setMyReviews([
+        {
+          id: 1,
+          title: '청년직업역량개발 프로그램 후기',
+          content: '정말 유익한 프로그램이었어요. 디자인에 대한 새로운 시각을 얻었습니다.',
+          postCategory: 'REVIEW',
+          activityId: 1,
+          activityTitle: '청년직업역량개발 [도전! 디자이너!] 프로그램',
+          rating: 5,
+          createdAt: '2024-08-15T09:00:00.000Z',
+          likeCount: 12,
+          commentCount: 5
+        },
+        {
+          id: 2,
+          title: '마음 성장 보드게임 후기',
+          content: '보드게임을 통해 자신감이 많이 향상되었어요. 추천합니다!',
+          postCategory: 'REVIEW',
+          activityId: 2,
+          activityTitle: '자신감UP! 관계소통UP! 마음 성장 보드게임',
+          rating: 4,
+          createdAt: '2024-08-10T16:00:00.000Z',
+          likeCount: 8,
+          commentCount: 3
+        }
+      ])
     } finally {
       setDataLoading(false)
     }
