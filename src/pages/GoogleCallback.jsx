@@ -2,7 +2,7 @@ import { useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { toast } from 'sonner'
-import { memberService } from '../services/memberService'
+import { loginWithGoogle } from '../services/memberApi'
 
 export default function GoogleCallback() {
   const navigate = useNavigate()
@@ -27,7 +27,7 @@ export default function GoogleCallback() {
         if (code) {
           try {
             // 백엔드에 코드를 보내고 사용자 정보를 받아옴
-            const loginResponse = await memberService.loginWithGoogle(code)
+            const loginResponse = await loginWithGoogle(code)
             
             if (loginResponse && loginResponse.data) {
               const userData = loginResponse.data;

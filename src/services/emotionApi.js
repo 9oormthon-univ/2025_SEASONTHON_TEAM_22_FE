@@ -1,5 +1,5 @@
 import axios from 'axios'
-import { memberService } from './memberService'
+import { getMyInfo } from './memberApi'
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
 
@@ -58,7 +58,7 @@ export const getEmotions = (pageable = { page: 0, size: 10, sort: ['createdAt,de
 export const createEmotion = async (emotionData, memberId) => {
   // memberId가 없으면 현재 사용자 정보를 가져와서 사용
   if (!memberId) {
-    const currentUser = await memberService.getMyInfo()
+    const currentUser = await getMyInfo()
     memberId = currentUser.id
   }
 

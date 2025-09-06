@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import { ChevronLeft } from 'lucide-react'
 import { toast } from 'sonner'
 import { useAuth } from '../contexts/AuthContext'
-import { memberService } from '../services/memberService'
+import { signup } from '../services/memberApi'
 
 export default function Signup() {
   const navigate = useNavigate()
@@ -67,7 +67,7 @@ export default function Signup() {
     
     try {
       // API를 통한 회원가입
-      const response = await memberService.signup({
+      const response = await signup({
         loginId: formData.username,
         email: formData.email,
         password: formData.password,
