@@ -92,14 +92,14 @@ export default function MyPage() {
   
   const handleSaveProfile = async () => {
     try {
-      const response = await axios.put('/api/v1/members/me', {
+      const response = await axios.put('/api/v1/members/mypage', {
         nickname: tempNickname,
         profileImageUrl: userInfo?.profileImageUrl || null
       })
       
       if (response.data && response.data.success) {
         // 사용자 정보 다시 조회
-        const updatedResponse = await axios.get('/api/v1/members/me')
+        const updatedResponse = await axios.get('/api/v1/members/mypage')
         if (updatedResponse.data && updatedResponse.data.success) {
           setUserInfo(updatedResponse.data.data)
         }
@@ -172,11 +172,6 @@ export default function MyPage() {
           <ActivityItem onClick={()=> navigate('/training-record')}>
             <ActivityItemContent>
               <span>마음 훈련 기록</span>
-              {trainingProgress && (
-                <ActivityProgress>
-                  총 {trainingProgress.totalTrainedSessions}회 • 완료율 {trainingProgress.averageCompletion}%
-                </ActivityProgress>
-              )}
             </ActivityItemContent>
           </ActivityItem>
           <ActivityItem onClick={() => navigate('/applications')}>신청한 활동</ActivityItem>
