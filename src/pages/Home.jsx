@@ -23,6 +23,7 @@ export default function Home() {
   const [isSaving, setIsSaving] = useState(false)
   const [showProfileMenu, setShowProfileMenu] = useState(false)
   const [showMoodModal, setShowMoodModal] = useState(false)
+  const [completedMood, setCompletedMood] = useState(null)
   const profileMenuRef = useRef(null)
   const moodEmoji = { '행복': '😊', '보통': '🙂', '슬픔': '😢', '화남': '😠', '걱정': '😟' }
 
@@ -33,6 +34,7 @@ export default function Home() {
 
   const handleCloseMoodModal = () => {
     setShowMoodModal(false)
+    setCompletedMood(null)
   }
 
   // 한국어 라벨을 영어 키로 변환
@@ -78,28 +80,18 @@ export default function Home() {
         note: journalText.trim()
       }
       
-      const memberId = currentUser.id; // currentUser 객체 구조에 맞게 수정 필요
+      const memberId = currentUser.id;
       await createEmotion(emotionData, memberId);
       
-      // 로컬 스토리지에도 백업 저장
-      const now = new Date()
-      const dateLabel = `${now.getMonth()+1}월 ${now.getDate()}일`
-      const moodRecord = {
-        emoji: moodEmoji[selectedMood] || '🙂',
-        mood: `${selectedMood}해요`,
-        date: dateLabel,
-        reason: journalText
-      }
-      
-      // 로컬스토리지 사용 제거 - 감정 기록은 API를 통해 저장
+            
+      // 성공 모달 표시
+      setCompletedMood(selectedMood)
+      setShowMoodModal(true)
       
       // 상태 초기화
       setJournalText('')
       setShowJournalInput(false)
       setSelectedMood(null)
-      
-      // 성공 모달 표시
-      setShowMoodModal(true)
       
     } catch (error) {
       console.error('감정 기록 저장 실패:', error)
@@ -241,7 +233,7 @@ export default function Home() {
       <MoodCompleteModal
         isOpen={showMoodModal}
         onClose={handleCloseMoodModal}
-        selectedMood={getMoodKey(selectedMood)}
+        selectedMood={getMoodKey(completedMood)}
       />
     </Wrap>
   )

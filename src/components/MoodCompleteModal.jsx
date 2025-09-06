@@ -6,11 +6,17 @@ const MoodCompleteModal = ({ isOpen, onClose, selectedMood }) => {
 
   const getMoodDisplay = (mood) => {
     const moodMap = {
-      'happy': { emoji: '😊', label: '행복해요' },
-      'neutral': { emoji: '😐', label: '보통이에요' },
-      'sad': { emoji: '😢', label: '슬퍼요' },
-      'angry': { emoji: '😠', label: '화나요' },
-      'worried': { emoji: '😰', label: '걱정돼요' }
+      '행복': { emoji: '😊', label: '행복해요' },
+      '보통': { emoji: '🙂', label: '보통이에요' },
+      '슬픔': { emoji: '😢', label: '슬퍼요' },
+      '화남': { emoji: '😠', label: '화나요' },
+      '걱정': { emoji: '😟', label: '걱정돼요' },
+      // API에서 받는 영어 값들도 지원
+      'HAPPY': { emoji: '😊', label: '행복해요' },
+      'SOSO': { emoji: '🙂', label: '보통이에요' },
+      'SAD': { emoji: '😢', label: '슬퍼요' },
+      'ANGER': { emoji: '😠', label: '화나요' },
+      'WORRY': { emoji: '😟', label: '걱정돼요' }
     }
     return moodMap[mood] || { emoji: '😊', label: '행복해요' }
   }
