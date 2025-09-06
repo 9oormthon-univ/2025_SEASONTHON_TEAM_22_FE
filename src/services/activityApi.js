@@ -127,6 +127,32 @@ export const cancelActivity = (id) => {
   });
 };
 
+export const getMyLikedActivities = (memberId, pageable = { page: 0, size: 20, sort: ['createdAt,desc'] }) => {
+  const params = new URLSearchParams();
+  params.append('page', pageable.page || 0);
+  params.append('size', pageable.size || 20);
+  
+  if (pageable.sort && pageable.sort.length > 0) {
+    pageable.sort.forEach(sort => params.append('sort', sort));
+  }
+  return apiRequest(`/api/v1/activities/members/${memberId}/liked?${params.toString()}`);
+};
+
+// 내가 신청한 활동 목록 조회 (페이징)
+export const getMyAppliedActivities = (memberId, pageable = { page: 0, size: 20, sort: ['createdAt,desc'] }) => {
+  // 쿼리 파라미터 생성을 위해 URLSearchParams를 사용합니다.
+  const params = new URLSearchParams();
+  params.append('page', pageable.page || 0);
+  params.append('size', pageable.size || 20);
+  
+  if (pageable.sort && pageable.sort.length > 0) {
+    pageable.sort.forEach(sort => params.append('sort', sort));
+  }
+
+  // URL 경로에 memberId를 포함시키고, 쿼리 파라미터를 추가합니다.
+  return apiRequest(`/api/v1/activities/members/${memberId}/applied?${params.toString()}`);
+};
+
 export default {
   createActivity,
   getActivities,
@@ -136,5 +162,6 @@ export default {
   likeActivity,
   unlikeActivity,
   applyActivity,
-  cancelActivity
+  cancelActivity,
+  getMyAppliedActivities
 }

@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import PageHeader from '../components/PageHeader'
 import { BarChart3, Brain, Clock, Calendar } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
-import { answerService } from '../services/memberService'
+import { getProgressStatus, getHistory } from '../services/answerApi'
 
 export default function TrainingRecord() {
   const navigate = useNavigate();
@@ -23,11 +23,11 @@ export default function TrainingRecord() {
         setIsLoading(true);
         
         // 진행 현황 조회
-        const progress = await answerService.getProgressStatus(currentUser.id);
+        const progress = await getProgressStatus(currentUser.id);
         setProgressStatus(progress);
         
         // 날짜별 기록 조회
-        const history = await answerService.getHistory(currentUser.id, { page: 0, size: 20 });
+        const history = await getHistory(currentUser.id, { page: 0, size: 20 });
         setHistoryRecords(history);
         
       } catch (error) {

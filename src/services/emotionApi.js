@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { memberService } from './memberService'
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
 
@@ -54,7 +55,13 @@ export const getEmotions = (pageable = { page: 0, size: 10, sort: ['createdAt,de
 };
 
 // 감정 기록 생성
-export const createEmotion = (emotionData, memberId = 1) => {
+export const createEmotion = async (emotionData, memberId) => {
+  // memberId가 없으면 현재 사용자 정보를 가져와서 사용
+  if (!memberId) {
+    const currentUser = await memberService.getMyInfo()
+    memberId = currentUser.id
+  }
+
   const requestBody = {
     emotionState: emotionData.mood,
     emotionText: emotionData.note
@@ -66,39 +73,44 @@ export const createEmotion = (emotionData, memberId = 1) => {
   });
 };
 
-// 감정 기록 수정
-export const updateEmotion = (emotionId, emotionData) => {
-  return apiRequest(`/api/v1/emotions/${emotionId}`, {
-    method: 'PUT',
-    data: emotionData,
-  });
-};
+// 주간 감정 통계 조회
+export const getWeeklyEmotionStats = async (memberId) => {
+  const url = `/api/v1/emotions/${memberId}/most-week`;
 
-// 감정 기록 삭제
-export const deleteEmotion = (emotionId) => {
-  return apiRequest(`/api/v1/emotions/${emotionId}`, {
-    method: 'DELETE',
+  const response = await apiRequest(url, {
+    method: 'GET'
   });
-};
+
+  // apiRequest 헬퍼 함수가 이미 response.data를 반환하므로,
+  // 여기서 바로 데이터에 접근할 수 있습니다.
+  return response.data;
+}
 
 // 월간 감정 통계 조회
-export const getMonthlyEmotionStats = (memberId, year, month) => {
-  // 1. 기본 URL 경로만 정의합니다.
-  const url = `/api/v1/emotions/${memberId}/monthly-stats`;
+export const getMonthlyEmotionStats = async (memberId, year, month) => {
+  try {
+    const url = `/api/v1/emotions/${memberId}/monthly-stats`;
 
-  // 2. 쿼리 파라미터들을 객체로 묶습니다.
-  const params = {
-    year,
-    month,
-  };
+    const params = {
+      year,
+      month,
+    };
 
-  return apiRequest(url, { params });
+    const response = await apiRequest(url, {
+      method: 'GET',
+      params,
+    });
+
+    return response.data;
+  } catch (error) {
+    console.error('월간 감정 통계 조회 실패:', error.message);
+    throw error;
+  }
 };
 
 export default {
   getEmotions,
   createEmotion,
-  updateEmotion,
-  deleteEmotion,
+  getWeeklyEmotionStats,
   getMonthlyEmotionStats
 }

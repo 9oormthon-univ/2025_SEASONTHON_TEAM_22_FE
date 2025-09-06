@@ -5,7 +5,8 @@ import { useState, useEffect } from 'react'
 import { IoChevronBack, IoChevronForward } from 'react-icons/io5'
 import { Check, Home, Star, Users, BookOpen, Heart } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
-import { questionCardService, answerService } from '../services/memberService'
+import { getPrevious, getNext } from '../services/questionCardApi'
+import { createAnswer } from '../services/answerApi'
 import { toast } from 'sonner'
 
 export default function Training() {
@@ -98,7 +99,7 @@ export default function Training() {
     if (!current || !currentUser?.id || !answers[current.id]?.trim()) return;
 
     try {
-      await answerService.createAnswer(
+      await createAnswer(
         currentUser.id,
         current.id,
         answers[current.id]

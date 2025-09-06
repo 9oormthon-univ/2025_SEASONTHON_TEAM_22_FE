@@ -39,81 +39,93 @@ const apiRequest = async (url, options = {}) => {
 // ===== 게시글 관련 API =====
 
 // 게시글 상세 조회
-export const getPost = (id) => {
-  return apiRequest(`/api/v1/posts/${id}`);
+export const getPost = async (postId) => {
+    try {
+    const url = `/api/v1/posts/${postId}`;
+
+    const response = await apiRequest(url, {
+      method: 'GET',
+    });
+
+    return response.data;
+    
+  } catch (error) {
+    console.error('게시글 상세 조회 실패:', error.message);
+    throw error;
+  }
 };
 
 // 게시글 수정
-export const updatePost = (id, postData) => {
+export const updatePost = async (memberId, postId, postData) => {
   const requestBody = {
     title: postData.title,
     content: postData.content
   };
 
-  // REVIEW 카테고리인 경우 rating 추가
-  if (postData.category === 'REVIEW' && postData.rating !== undefined) {
-    requestBody.rating = postData.rating;
-  }
-
-  return apiRequest(`/api/v1/posts/${id}`, {
+  return apiRequest(`/api/v1/posts/${postId}/${memberId}`, {
     method: 'PUT',
     data: requestBody,
   });
 };
 
 // 게시글 삭제
-export const deletePost = (id) => {
-  return apiRequest(`/api/v1/posts/${id}`, {
+export const deletePost = (memberId, postId) => {
+  return apiRequest(`/api/v1/posts/${postId}/${memberId}`, {
     method: 'DELETE',
   });
 };
 
 // 게시글 목록 조회
-export const getPosts = (filters = {}) => {
-  const params = new URLSearchParams();
-  
-  // 필터 조건 추가
-  if (filters.category) {
-    params.append('category', filters.category);
-  }
-  if (filters.activityId) {
-    params.append('activityId', filters.activityId);
-  }
-  if (filters.memberId) {
-    params.append('memberId', filters.memberId);
-  }
-  
-  // 페이지네이션
-  if (filters.page !== undefined) {
-    params.append('page', filters.page);
-  }
-  if (filters.size !== undefined) {
-    params.append('size', filters.size);
-  }
-  
-  // 정렬
-  if (filters.sort) {
-    if (Array.isArray(filters.sort)) {
-      filters.sort.forEach(sortItem => {
-        params.append('sort', sortItem);
-      });
-    } else {
-      params.append('sort', filters.sort);
+export const getPosts = async (activityId, memberId = {}) => {
+  try {
+    // 1. Path Parameter를 사용하여 기본 URL을 구성합니다.
+    const baseUrl = `/api/v1/posts/${activityId}/${memberId}`;
+
+    // 2. Query Parameter를 처리합니다.
+    const params = new URLSearchParams();
+
+    if (filters.category) {
+      params.append('category', filters.category);
     }
+    if (filters.page !== undefined) {
+      params.append('page', filters.page);
+    }
+    if (filters.size !== undefined) {
+      params.append('size', filters.size);
+    }
+    if (filters.sort) {
+      // sort는 배열로 여러 개 올 수 있으므로 별도 처리
+      if (Array.isArray(filters.sort)) {
+        filters.sort.forEach(sortItem => params.append('sort', sortItem));
+      } else {
+        params.append('sort', filters.sort);
+      }
+    }
+
+    // 3. 최종 URL을 조합합니다.
+    const queryString = params.toString();
+    const url = queryString ? `${baseUrl}?${queryString}` : baseUrl;
+
+    const response = await apiRequest(url, {
+      method: 'GET',
+    });
+
+    return response.data;
+
+  } catch (error) {
+    console.error('게시글 목록 조회 실패:', error.message);
+    throw error;
   }
-
-  const queryString = params.toString();
-  const url = queryString ? `/api/v1/posts?${queryString}` : '/api/v1/posts';
-
-  return apiRequest(url);
 };
 
 // 게시글 생성
-export const createPost = (postData) => {
+export const createPost = (memberId, postData) => {
   const requestBody = {
     postCategory: postData.postCategory,
     title: postData.title,
-    content: postData.content
+    content: postData.content,
+    activityId: postData.activityId,
+    rating: postData.rating
   };
 
   // REVIEW 카테고리인 경우 activityId와 rating 필수
@@ -128,25 +140,80 @@ export const createPost = (postData) => {
     requestBody.rating = postData.rating;
   }
 
-  return apiRequest('/api/v1/posts', {
+  return apiRequest(`/api/v1/posts/${memberId}`, {
     method: 'POST',
     data: requestBody,
   });
 };
 
 // 게시글 좋아요
-export const likePost = (id) => {
-  return apiRequest(`/api/v1/posts/${id}/like`, {
+export const likePost = (memberId, postId) => {
+  return apiRequest(`/api/v1/posts/${postId}/like/${memberId}`, {
     method: 'POST',
   });
 };
 
 // 게시글 좋아요 취소
-export const unlikePost = (id) => {
-  return apiRequest(`/api/v1/posts/${id}/like`, {
+export const unlikePost = (memberId, postId) => {
+  return apiRequest(`/api/v1/posts/${postId}/like/${memberId}`, {
     method: 'DELETE',
   });
 };
+
+export const getDetailPosts = (postId) => {
+  return apiRequest(`/api/v1/posts/${postId}`, {
+    method: 'GET',
+  });
+}
+
+export const getMyReviews = (memberId, pageable = { page: 0, size: 20, sort: ['createdAt,desc'] }) => {
+  const params = new URLSearchParams();
+  params.append('page', pageable.page);
+  params.append('size', pageable.size);
+  if (pageable.sort && pageable.sort.length > 0) {
+    pageable.sort.forEach(sort => params.append('sort', sort));
+  }
+  return apiRequest(`/api/v1/posts/${memberId}/reviews?${params.toString()}`, {
+    method: 'GET',
+  });
+}
+
+export const getMyPosts = (
+  memberId,
+  category,
+  pageable = { page: 0, size: 20, sort: ["createdAt,desc"] }
+) => {
+  const params = new URLSearchParams();
+
+  // 1. category 파라미터가 존재할 경우, URL 파라미터에 추가합니다.
+  if (category) {
+    params.append("category", category);
+  }
+
+  // --- 기존 pageable 로직 ---
+  params.append("page", pageable.page);
+  params.append("size", pageable.size);
+  if (pageable.sort && pageable.sort.length > 0) {
+    pageable.sort.forEach((sort) => params.append("sort", sort));
+  }
+
+  // 2. apiRequest는 그대로 사용합니다.
+  return apiRequest(`/api/v1/posts/${memberId}?${params.toString()}`, {
+    method: "GET",
+  });
+};
+
+export const myLikes = (memberId, pageable = { page: 0, size: 20, sort: ["createdAt,desc"] }) => {
+  const params = new URLSearchParams();
+  params.append("page", pageable.page);
+  params.append("size", pageable.size);
+  if (pageable.sort && pageable.sort.length > 0) {
+    pageable.sort.forEach((sort) => params.append("sort", sort));
+  }
+  return apiRequest(`/api/v1/posts/${memberId}/likes?${params.toString()}`, {
+    method: "GET",
+  });
+}
 
 export default {
   getPost,
@@ -155,5 +222,9 @@ export default {
   getPosts,
   createPost,
   likePost,
-  unlikePost
+  unlikePost,
+  getDetailPosts,
+  getMyReviews,
+  getMyPosts,
+  myLikes,
 }

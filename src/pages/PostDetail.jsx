@@ -3,7 +3,7 @@ import PageHeader from '../components/PageHeader'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import { getPost } from '../services/postApi'
-import { commentService } from '../services/memberService'
+import { getComments, createComment, updateComment, deleteComment } from '../services/commentApi'
 import { useAuth } from '../contexts/AuthContext'
 import { toast } from 'sonner'
 import { MessageCircle, Send, Edit2, Trash2, MoreVertical } from 'lucide-react'
@@ -64,7 +64,7 @@ export default function PostDetail() {
     const fetchComments = async () => {
       if (id) {
         try {
-          const response = await commentService.getComments(id)
+          const response = await getComments(id)
           setComments(response.data?.content || [])
         } catch (error) {
           console.error('댓글 조회 실패:', error)
@@ -80,7 +80,7 @@ export default function PostDetail() {
     
     try {
       setIsSubmittingComment(true)
-      const response = await commentService.createComment(id, newComment.trim())
+      const response = await createComment(id, newComment.trim())
       setComments(prev => [response, ...prev])
       setNewComment('')
       toast.success('댓글이 작성되었습니다.')
@@ -104,7 +104,7 @@ export default function PostDetail() {
     if (!editingContent.trim()) return
     
     try {
-      const response = await commentService.updateComment(editingCommentId, editingContent.trim())
+      const response = await updateComment(editingCommentId, editingContent.trim())
       setComments(prev => prev.map(comment => 
         comment.id === editingCommentId ? response.data : comment
       ))
@@ -128,7 +128,7 @@ export default function PostDetail() {
     if (!confirm('댓글을 삭제하시겠습니까?')) return
     
     try {
-      await commentService.deleteComment(commentId)
+      await deleteComment(commentId)
       setComments(prev => prev.filter(comment => comment.id !== commentId))
       setShowCommentMenu(null)
       toast.success('댓글이 삭제되었습니다.')
