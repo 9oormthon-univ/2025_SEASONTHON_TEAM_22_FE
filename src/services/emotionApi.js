@@ -56,7 +56,6 @@ export const getEmotions = (pageable = { page: 0, size: 10, sort: ['createdAt,de
 
 // 감정 기록 생성
 export const createEmotion = async (emotionData, memberId) => {
-  // memberId가 없으면 현재 사용자 정보를 가져와서 사용
   if (!memberId) {
     const currentUser = await getMyInfo()
     memberId = currentUser.id
@@ -67,7 +66,7 @@ export const createEmotion = async (emotionData, memberId) => {
     emotionText: emotionData.note
   };
 
-  return apiRequest(`/api/v1/emotions?member-id=${memberId}`, {
+  return apiRequest(`/api/v1/emotions/${memberId}`, {
     method: 'POST',
     data: requestBody,
   });
