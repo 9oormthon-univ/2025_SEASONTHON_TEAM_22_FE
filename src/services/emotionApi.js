@@ -142,14 +142,16 @@ export const deleteEmotion = (emotionId) => {
 
 // 월간 감정 통계 조회
 export const getMonthlyEmotionStats = (memberId, year, month) => {
-  const params = new URLSearchParams();
-  if (year) params.append('year', year);
-  if (month) params.append('month', month);
-  
-  const queryString = params.toString();
-  const url = queryString ? `/api/v1/emotions/${memberId}/monthly-stats?${queryString}` : `/api/v1/emotions/${memberId}/monthly-stats`;
-  
-  return apiRequest(url);
+  // 1. 기본 URL 경로만 정의합니다.
+  const url = `/api/v1/emotions/${memberId}/monthly-stats`;
+
+  // 2. 쿼리 파라미터들을 객체로 묶습니다.
+  const params = {
+    year,
+    month,
+  };
+
+  return apiRequest(url, { params });
 };
 
 export default {
