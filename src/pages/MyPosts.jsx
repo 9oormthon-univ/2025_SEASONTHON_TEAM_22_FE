@@ -2,7 +2,286 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ChevronLeft, Home, Star, Users, Brain, Heart, MessageCircle } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
+import { toast } from 'sonner'
+import axios from 'axios'
 import styled from 'styled-components'
+
+export default function MyPosts() {
+  const navigate = useNavigate()
+  const { currentUser, isLoading } = useAuth()
+  const [activeContentTab, setActiveContentTab] = useState('게시글')
+  
+  // API 데이터 상태
+  const [myPosts, setMyPosts] = useState([])
+  const [myComments, setMyComments] = useState([])
+  const [myReviews, setMyReviews] = useState([])
+  const [dataLoading, setDataLoading] = useState(false)
+
+  // 사용자 정보가 없으면 로그인 페이지로 리다이렉트
+  useEffect(() => {
+    if (!isLoading && !currentUser) {
+      toast.error('로그인이 필요합니다.')
+      navigate('/login')
+    }
+  }, [currentUser, isLoading, navigate])
+
+  // 내가 쓴 게시글 조회
+  const fetchMyPosts = async () => {
+    if (!currentUser?.id) return
+    
+    try {
+      setDataLoading(true)
+      const response = await axios.get(`/api/v1/posts/my?page=0&size=20`)
+      if (response.data && response.data.success) {
+        setMyPosts(response.data.data?.content || [])
+      }
+    } catch (error) {
+      console.error('내 게시글 조회 실패:', error)
+      toast.error('게시글을 불러오는데 실패했습니다.')
+    } finally {
+      setDataLoading(false)
+    }
+  }
+
+  // 내가 쓴 댓글 조회
+  const fetchMyComments = async () => {
+    if (!currentUser?.id) return
+    
+    try {
+      setDataLoading(true)
+      const response = await axios.get(`/api/v1/comments/my?page=0&size=20`)
+      if (response.data && response.data.success) {
+        setMyComments(response.data.data?.content || [])
+      }
+    } catch (error) {
+      console.error('내 댓글 조회 실패:', error)
+      toast.error('댓글을 불러오는데 실패했습니다.')
+    } finally {
+      setDataLoading(false)
+    }
+  }
+
+  // 내가 쓴 후기 조회
+  const fetchMyReviews = async () => {
+    if (!currentUser?.id) return
+    
+    try {
+      setDataLoading(true)
+      const response = await axios.get(`/api/v1/posts/my/reviews?page=0&size=20`)
+      if (response.data && response.data.success) {
+        setMyReviews(response.data.data?.content || [])
+      }
+    } catch (error) {
+      console.error('내 후기 조회 실패:', error)
+      toast.error('후기를 불러오는데 실패했습니다.')
+    } finally {
+      setDataLoading(false)
+    }
+  }
+
+  // 탭 변경 시 해당 데이터 로드
+  useEffect(() => {
+    if (currentUser?.id) {
+      switch (activeContentTab) {
+        case '게시글':
+          fetchMyPosts()
+          break
+        case '댓글':
+          fetchMyComments()
+          break
+        case '후기':
+          fetchMyReviews()
+          break
+        default:
+          break
+      }
+    }
+  }, [activeContentTab, currentUser?.id])
+
+  const navItems = [
+    { label: '홈', active: false, icon: Home },
+    { label: '활동 추천', active: false, icon: Star },
+    { label: '커뮤니티', active: false, icon: Users },
+    { label: '마음 훈련', active: false, icon: Brain },
+    { label: '내 마음', active: true, icon: Heart }
+  ]
+
+  const handleTabClick = (tabLabel) => {
+    if (tabLabel === '홈') {
+      navigate('/')
+    } else {
+      // 다른 탭으로 이동하는 로직
+      console.log(`Navigate to ${tabLabel}`)
+    }
+  }
+
+  const handlePostClick = (postId) => {
+    navigate(`/post/${postId}`)
+  }
+
+  const renderContent = () => {
+    switch (activeContentTab) {
+      case '게시글':
+        return (
+          <ContentArea>
+            {dataLoading ? (
+              <EmptyState>
+                <EmptyText>로딩 중...</EmptyText>
+              </EmptyState>
+            ) : myPosts.length > 0 ? (
+              myPosts.map((post) => (
+                <PostCard key={post.id} onClick={() => handlePostClick(post.id)}>
+                  <PostContent>
+                    <PostTitle>{post.title}</PostTitle>
+                    <PostMeta>
+                      <span>{post.createdAt ? new Date(post.createdAt).toLocaleDateString() : '날짜 없음'}</span>
+                      <CommentCount>
+                        <CommentCountText>{post.commentCount || 0}</CommentCountText>
+                      </CommentCount>
+                    </PostMeta>
+                  </PostContent>
+                </PostCard>
+              ))
+            ) : (
+              <EmptyState>
+                <EmptyText>작성한 게시글이 없습니다</EmptyText>
+              </EmptyState>
+            )}
+          </ContentArea>
+        )
+
+      case '댓글':
+        return (
+          <ContentArea>
+            {dataLoading ? (
+              <EmptyState>
+                <EmptyText>로딩 중...</EmptyText>
+              </EmptyState>
+            ) : myComments.length > 0 ? (
+              myComments.map((comment) => (
+                <PostCard key={comment.id} onClick={() => handlePostClick(comment.postId)}>
+                  <PostContent>
+                    <PostTitle>{comment.content}</PostTitle>
+                    <PostMeta>
+                      <span>{comment.createdAt ? new Date(comment.createdAt).toLocaleDateString() : '날짜 없음'}</span>
+                    </PostMeta>
+                  </PostContent>
+                </PostCard>
+              ))
+            ) : (
+              <EmptyState>
+                <EmptyText>작성한 댓글이 없습니다</EmptyText>
+              </EmptyState>
+            )}
+          </ContentArea>
+        )
+
+      case '후기':
+        return (
+          <ContentArea>
+            {dataLoading ? (
+              <EmptyState>
+                <EmptyText>로딩 중...</EmptyText>
+              </EmptyState>
+            ) : myReviews.length > 0 ? (
+              myReviews.map((review) => (
+                <PostCard key={review.id} onClick={() => handlePostClick(review.id)}>
+                  <PostContent>
+                    <PostTitle>{review.title}</PostTitle>
+                    <PostMeta>
+                      <span>{review.createdAt ? new Date(review.createdAt).toLocaleDateString() : '날짜 없음'}</span>
+                      {review.rating && (
+                        <CommentCount>
+                          <CommentCountText>⭐ {review.rating}</CommentCountText>
+                        </CommentCount>
+                      )}
+                    </PostMeta>
+                  </PostContent>
+                </PostCard>
+              ))
+            ) : (
+              <EmptyState>
+                <EmptyText>작성한 후기가 없습니다</EmptyText>
+              </EmptyState>
+            )}
+          </ContentArea>
+        )
+
+      default:
+        return null
+    }
+  }
+
+  // 로딩 중이거나 사용자 정보가 없으면 아무것도 렌더링하지 않음
+  if (isLoading || !currentUser) {
+    return null
+  }
+
+  return (
+    <Container>
+      {/* Header */}
+      <Header>
+        <BackButton onClick={() => navigate(-1)}>
+          <ChevronLeft size={20} />
+        </BackButton>
+        <HeaderTitle>내 활동</HeaderTitle>
+      </Header>
+
+      {/* Main Content */}
+      <MainContent>
+        <ContentWrapper>
+          {/* Profile Section */}
+          <ProfileSection>
+            <ProfileIcon>👤</ProfileIcon>
+            <ProfileInfo>
+              <ProfileName>{currentUser?.nickname || '사용자'}</ProfileName>
+              <ProfileEmail>{currentUser?.email || '123@gmail.com'}</ProfileEmail>
+            </ProfileInfo>
+          </ProfileSection>
+
+          {/* Content Tabs */}
+          <TabContainer>
+            {['게시글', '댓글', '후기'].map((tab) => (
+              <TabButton
+                key={tab}
+                onClick={() => setActiveContentTab(tab)}
+                active={activeContentTab === tab}
+              >
+                {tab}
+              </TabButton>
+            ))}
+          </TabContainer>
+
+          {/* Content */}
+          {renderContent()}
+        </ContentWrapper>
+      </MainContent>
+
+      {/* Bottom Navigation */}
+      <BottomNav>
+        <BottomNavContent>
+          <NavItems>
+            {navItems.map((item, index) => {
+              const IconComponent = item.icon
+              return (
+                <NavButton
+                  key={index}
+                  onClick={() => handleTabClick(item.label)}
+                  active={item.active}
+                >
+                  <NavIcon active={item.active}>
+                    <IconComponent size={20} />
+                  </NavIcon>
+                  {item.label}
+                </NavButton>
+              )
+            })}
+          </NavItems>
+        </BottomNavContent>
+      </BottomNav>
+    </Container>
+  )
+}
 
 const Container = styled.div`
   min-height: 100vh;
@@ -254,178 +533,3 @@ const NavIcon = styled.div`
     color: var(--muted-foreground);
   `}
 `
-
-export default function MyPosts() {
-  const navigate = useNavigate()
-  const { currentUser } = useAuth()
-  const [activeContentTab, setActiveContentTab] = useState('게시글')
-
-  // 내가 쓴 게시글 데이터 (임시)
-  const myPosts = [
-    {
-      id: 1,
-      title: '자조모임 처음 참여해봤는데',
-      date: '2024-08-31',
-      commentCount: 3,
-      content: '처음에는 긴장되었지만 다들 친절하게 대해주셔서 좋았어요.'
-    }
-  ]
-
-  // 내가 쓴 댓글 데이터 (임시)
-  const myComments = [
-    {
-      id: 1,
-      content: '공감합니다(내가 단 댓글)',
-      originalPost: '자조모임 처음 나가봄에 대해서(내가 댓글 단 게시글)',
-      date: '2024-08-30',
-      postId: 2
-    }
-  ]
-
-  const navItems = [
-    { label: '홈', active: false, icon: Home },
-    { label: '활동 추천', active: false, icon: Star },
-    { label: '커뮤니티', active: false, icon: Users },
-    { label: '마음 훈련', active: false, icon: Brain },
-    { label: '내 마음', active: true, icon: Heart }
-  ]
-
-  const handleTabClick = (tabLabel) => {
-    if (tabLabel === '홈') {
-      navigate('/')
-    } else {
-      // 다른 탭으로 이동하는 로직
-      console.log(`Navigate to ${tabLabel}`)
-    }
-  }
-
-  const handlePostClick = (postId) => {
-    navigate(`/post/${postId}`)
-  }
-
-  const renderContent = () => {
-    switch (activeContentTab) {
-      case '게시글':
-        return (
-          <ContentArea>
-            {myPosts.length > 0 ? (
-              myPosts.map((post) => (
-                <PostCard key={post.id} onClick={() => handlePostClick(post.id)}>
-                  <PostContent>
-                    <PostTitle>{post.title}</PostTitle>
-                    <PostMeta>
-                      <span>{post.date}</span>
-                      <CommentCount>
-                        <CommentCountText>{post.commentCount}</CommentCountText>
-                      </CommentCount>
-                    </PostMeta>
-                  </PostContent>
-                </PostCard>
-              ))
-            ) : (
-              <EmptyState>
-                <EmptyText>작성한 게시글이 없습니다</EmptyText>
-              </EmptyState>
-            )}
-          </ContentArea>
-        )
-
-      case '댓글':
-        return (
-          <ContentArea>
-            {myComments.length > 0 ? (
-              myComments.map((comment) => (
-                <PostCard key={comment.id} onClick={() => handlePostClick(comment.postId)}>
-                  <PostContent>
-                    <PostTitle>{comment.content}</PostTitle>
-                    <PostMeta>
-                      <span>{comment.originalPost}</span>
-                    </PostMeta>
-                  </PostContent>
-                </PostCard>
-              ))
-            ) : (
-              <EmptyState>
-                <EmptyText>작성한 댓글이 없습니다</EmptyText>
-              </EmptyState>
-            )}
-          </ContentArea>
-        )
-
-      case '후기':
-        return (
-          <EmptyState>
-            <EmptyText>작성한 후기가 없습니다</EmptyText>
-          </EmptyState>
-        )
-
-      default:
-        return null
-    }
-  }
-
-  return (
-    <Container>
-      {/* Header */}
-      <Header>
-        <BackButton onClick={() => navigate(-1)}>
-          <ChevronLeft size={20} />
-        </BackButton>
-        <HeaderTitle>내 활동</HeaderTitle>
-      </Header>
-
-      {/* Main Content */}
-      <MainContent>
-        <ContentWrapper>
-          {/* Profile Section */}
-          <ProfileSection>
-            <ProfileIcon>👤</ProfileIcon>
-            <ProfileInfo>
-              <ProfileName>{currentUser?.nickname || '사용자'}</ProfileName>
-              <ProfileEmail>{currentUser?.email || '123@gmail.com'}</ProfileEmail>
-            </ProfileInfo>
-          </ProfileSection>
-
-          {/* Content Tabs */}
-          <TabContainer>
-            {['게시글', '댓글', '후기'].map((tab) => (
-              <TabButton
-                key={tab}
-                onClick={() => setActiveContentTab(tab)}
-                active={activeContentTab === tab}
-              >
-                {tab}
-              </TabButton>
-            ))}
-          </TabContainer>
-
-          {/* Content */}
-          {renderContent()}
-        </ContentWrapper>
-      </MainContent>
-
-      {/* Bottom Navigation */}
-      <BottomNav>
-        <BottomNavContent>
-          <NavItems>
-            {navItems.map((item, index) => {
-              const IconComponent = item.icon
-              return (
-                <NavButton
-                  key={index}
-                  onClick={() => handleTabClick(item.label)}
-                  active={item.active}
-                >
-                  <NavIcon active={item.active}>
-                    <IconComponent size={20} />
-                  </NavIcon>
-                  {item.label}
-                </NavButton>
-              )
-            })}
-          </NavItems>
-        </BottomNavContent>
-      </BottomNav>
-    </Container>
-  )
-}

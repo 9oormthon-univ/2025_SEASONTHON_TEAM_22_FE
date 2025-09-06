@@ -32,7 +32,7 @@ export default function MyPage() {
   useEffect(() => {
     const fetchUserInfo = async () => {
       try {
-        const response = await axios.get('/api/v1/members/me')
+        const response = await axios.get('/api/v1/members/mypage')
         if (response.data && response.data.success) {
           setUserInfo(response.data.data)
         }
@@ -136,7 +136,6 @@ export default function MyPage() {
   }
   
   const confirmDeleteAccount = () => {
-    // 실제로는 API 호출로 계정 삭제
     logout()
     toast.success('계정이 삭제되었습니다.')
     navigate('/login')
