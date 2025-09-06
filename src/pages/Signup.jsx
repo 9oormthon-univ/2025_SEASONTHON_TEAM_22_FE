@@ -25,9 +25,9 @@ export default function Signup() {
     if (currentStep < 2) {
       // 각 단계별 유효성 검사
       if (currentStep === 1) {
-        if (!formData.loginId.trim()) {
-          toast.error("아이디를 입력해주세요.");
-          return;
+        if (!formData.username.trim()) {
+          toast.error('아이디를 입력해주세요.')
+          return
         }
         if (!isUsernameChecked) {
           toast.error('아이디 중복확인을 해주세요.')
