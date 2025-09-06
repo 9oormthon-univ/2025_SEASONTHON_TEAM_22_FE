@@ -4,10 +4,12 @@ import PageHeader from '../components/PageHeader'
 import { Star, ChevronDown } from 'lucide-react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { createPost } from '../services/postApi'
+import { useAuth } from '../contexts/AuthContext'
 import { toast } from 'sonner'
 
 export default function WritePost() {
   const navigate = useNavigate()
+  const { currentUser } = useAuth()
   const [search] = useSearchParams()
   const initialMode = (search.get('mode') === 'review') ? 'review' : 'post'
   const [mode, setMode] = useState(initialMode) // 'post' | 'review'
@@ -24,7 +26,7 @@ export default function WritePost() {
   const disabled = !title.trim() || !content.trim() || (isReview && rating === 0)
 
   const handleSubmit = async () => {
-    if (disabled || isSubmitting) return
+    if (disabled || isSubmitting || !currentUser) return
     
     setIsSubmitting(true)
     
@@ -39,7 +41,7 @@ export default function WritePost() {
           rating
         }
         
-        await createPost(reviewData)
+        await createPost(currentUser.id, reviewData)
         toast.success('후기가 성공적으로 작성되었습니다!')
         navigate('/community')
       } else {
@@ -50,7 +52,7 @@ export default function WritePost() {
           content
         }
         
-        await createPost(postData)
+        await createPost(currentUser.id, postData)
         toast.success('게시글이 성공적으로 작성되었습니다!')
         navigate('/community')
       }
