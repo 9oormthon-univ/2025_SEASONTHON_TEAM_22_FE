@@ -36,7 +36,7 @@ export default function Login() {
       // 로그인 성공
       login(response.member, response.accessToken)
       
-      toast.success(`${response.member.nickname}님, 환영합니다!`)
+      toast.success(`${response.data.member.nickname}님, 환영합니다!`)
       navigate('/')
     } catch (error) {
       console.error('로그인 실패:', error)
