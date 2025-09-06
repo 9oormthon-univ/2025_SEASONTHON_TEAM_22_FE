@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom'
 import styled from 'styled-components'
 import PageHeader from '../components/PageHeader'
 import { Users, BookOpen, MapPin, Calendar, Clock } from 'lucide-react'
-import { getActivity } from '../services/emotionService'
+import { getActivity } from '../services/activityApi'
 import useApplicationsStore from '../stores/applicationsStore'
 
 export default function ActivityDetail() {

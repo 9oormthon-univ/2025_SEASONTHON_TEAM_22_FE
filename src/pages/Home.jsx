@@ -2,7 +2,7 @@ import styled from 'styled-components'
 import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { TreePine, Compass, User, LogOut } from 'lucide-react'
-import { createEmotion } from '../services/emotionService'
+import { createEmotion } from '../services/emotionApi'
 import { useAuth } from '../contexts/AuthContext'
 
 export default function Home() {

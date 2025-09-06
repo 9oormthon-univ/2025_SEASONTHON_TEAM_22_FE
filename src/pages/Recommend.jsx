@@ -5,7 +5,7 @@ import Tabs from '../components/Tabs'
 import { IoLocationOutline, IoTimeOutline, IoPersonOutline } from 'react-icons/io5'
 import { useNavigate } from 'react-router-dom'
 import { Compass, TreePine, BookOpen, Headphones, Target, Gamepad2, Cloud, Smile, Zap, Meh, Angry, Frown, Heart, MessageCircle } from 'lucide-react'
-import { getActivities } from '../services/emotionService'
+import { getActivities } from '../services/activityApi'
 import useFavoritesStore from '../stores/favoritesStore'
 
 export default function Recommend() {

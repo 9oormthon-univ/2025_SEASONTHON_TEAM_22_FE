@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
-import { likeActivity, unlikeActivity } from '../services/emotionService'
+import { likeActivity, unlikeActivity } from '../services/activityApi'
 import { toast } from 'sonner'
 
 // 개발 모드 설정 (API 서버가 없을 때 사용)

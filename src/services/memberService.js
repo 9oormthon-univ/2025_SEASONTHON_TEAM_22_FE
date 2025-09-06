@@ -39,6 +39,7 @@ apiClient.interceptors.response.use(
       const token = localStorage.getItem('accessToken')
       if (token) {
         try {
+          // refresh 토큰을 사용하여 새로운 access 토큰 요청
           const refreshResponse = await axios.get(`${API_BASE_URL}/auth/refresh`, {
             headers: {
               'Content-Type': 'application/json',
@@ -48,8 +49,9 @@ apiClient.interceptors.response.use(
           
           if (refreshResponse.data.success && refreshResponse.data.data) {
             // 새로운 토큰으로 재시도
-            localStorage.setItem('accessToken', refreshResponse.data.data)
-            originalRequest.headers.Authorization = `Bearer ${refreshResponse.data.data}`
+            const newToken = refreshResponse.data.data
+            localStorage.setItem('accessToken', newToken)
+            originalRequest.headers.Authorization = `Bearer ${newToken}`
             
             return apiClient(originalRequest)
           }
@@ -58,8 +60,16 @@ apiClient.interceptors.response.use(
           // 토큰 갱신 실패 시 로그아웃 처리
           localStorage.removeItem('accessToken')
           localStorage.removeItem('currentUser')
-          window.location.href = '/login'
+          // 로그인 페이지로 리다이렉트
+          if (window.location.pathname !== '/login') {
+            window.location.href = '/login'
+          }
           throw new Error('인증이 만료되었습니다. 다시 로그인해주세요.')
+        }
+      } else {
+        // 토큰이 없는 경우 로그인 페이지로 리다이렉트
+        if (window.location.pathname !== '/login') {
+          window.location.href = '/login'
         }
       }
     }

@@ -1,7 +1,7 @@
 import styled from 'styled-components'
 import { useState, useEffect } from 'react'
 import PageHeader from '../components/PageHeader'
-import { getEmotions } from '../services/emotionService'
+import { getEmotions } from '../services/emotionApi'
 
 export default function MoodRecord() {
   const [emotions, setEmotions] = useState([])

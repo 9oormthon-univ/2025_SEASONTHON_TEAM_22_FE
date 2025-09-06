@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import Tabs from '../components/Tabs'
 import { Heart as HeartIcon } from 'lucide-react'
-import { getPosts, likePost, unlikePost } from '../services/emotionService'
+import { getPosts, likePost, unlikePost } from '../services/postApi'
 import { toast } from 'sonner'
 
 export default function Community() {

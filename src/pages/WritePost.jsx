@@ -4,7 +4,7 @@ import PageHeader from '../components/PageHeader'
 import { Star, ChevronDown } from 'lucide-react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { addPost, addReview } from '../utils/storage'
-import { createPost } from '../services/emotionService'
+import { createPost } from '../services/postApi'
 import { toast } from 'sonner'
 
 export default function WritePost() {
