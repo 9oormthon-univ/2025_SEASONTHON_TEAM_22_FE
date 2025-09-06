@@ -8,9 +8,9 @@ import MoodCompleteModal from '../components/MoodCompleteModal'
 
 const MOOD_MAP = {
   행복: { key: "HAPPY", emoji: "😊" },
-  보통: { key: "NEUTRAL", emoji: "🙂" },
+  보통: { key: "SOSO", emoji: "🙂" },
   슬픔: { key: "SAD", emoji: "😢" },
-  화남: { key: "ANGRY", emoji: "😠" },
+  화남: { key: "ANGER", emoji: "😠" },
   걱정: { key: "WORRY", emoji: "😟" },
 };
 
