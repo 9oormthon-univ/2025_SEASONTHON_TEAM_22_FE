@@ -1,14 +1,11 @@
 import { create } from 'zustand'
-import { persist, createJSONStorage } from 'zustand/middleware'
 import { likeActivity, unlikeActivity } from '../services/activityApi'
 import { toast } from 'sonner'
 
 // 개발 모드 설정 (API 서버가 없을 때 사용)
 const DEV_MODE = import.meta.env.VITE_DEV_MODE === 'true'
 
-const useFavoritesStore = create(
-  persist(
-    (set, get) => ({
+const useFavoritesStore = create((set, get) => ({
       // 찜한 활동 목록
       favoriteActivities: [],
       
@@ -120,13 +117,7 @@ const useFavoritesStore = create(
       clearFavorites: () => {
         set({ favoriteActivities: [] })
       }
-    }),
-    {
-      name: 'favorites-storage', // localStorage 키
-      storage: createJSONStorage(() => localStorage),
-      partialize: (state) => ({ favoriteActivities: state.favoriteActivities })
-    }
-  )
+    })
 )
 
 export default useFavoritesStore

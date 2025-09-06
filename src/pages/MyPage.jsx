@@ -8,11 +8,13 @@ import { useNavigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import { toast } from 'sonner'
 import { useAuth } from '../contexts/AuthContext'
-import { memberService, answerService, commentService } from '../services/memberService'
+import axios from 'axios'
+import useNotificationStore from '../stores/notificationStore'
 
 export default function MyPage() {
   const navigate = useNavigate()
   const { currentUser, logout } = useAuth()
+  const { notificationSettings, toggleNotification: toggleNotificationSetting } = useNotificationStore()
   
   // Modal states
   const [showEditModal, setShowEditModal] = useState(false)
@@ -25,21 +27,15 @@ export default function MyPage() {
   const [trainingProgress, setTrainingProgress] = useState(null)
   const [myComments, setMyComments] = useState([])
   
-  // 알림 설정 상태 (localStorage에서 불러오기)
-  const [notificationSettings, setNotificationSettings] = useState(() => {
-    const saved = localStorage.getItem('notification-settings')
-    return saved ? JSON.parse(saved) : {
-      emotionRecord: true,
-      favoriteActivity: true
-    }
-  })
   
   // 사용자 정보 조회
   useEffect(() => {
     const fetchUserInfo = async () => {
       try {
-        const info = await memberService.getMyInfo()
-        setUserInfo(info)
+        const response = await axios.get('/api/v1/members/me')
+        if (response.data && response.data.success) {
+          setUserInfo(response.data.data)
+        }
       } catch (error) {
         console.error('사용자 정보 조회 실패:', error)
       }
@@ -55,8 +51,10 @@ export default function MyPage() {
     const fetchTrainingProgress = async () => {
       try {
         if (currentUser?.id) {
-          const progress = await answerService.getProgressStatus(currentUser.id)
-          setTrainingProgress(progress)
+          const response = await axios.get(`/api/v1/answers/progress/${currentUser.id}`)
+          if (response.data && response.data.success) {
+            setTrainingProgress(response.data.data)
+          }
         }
       } catch (error) {
         console.error('마음 훈련 기록 조회 실패:', error)
@@ -73,8 +71,10 @@ export default function MyPage() {
     const fetchMyComments = async () => {
       try {
         if (currentUser?.id) {
-          const response = await commentService.getMyComments({ page: 0, size: 10 })
-          setMyComments(response.data?.content || [])
+          const response = await axios.get(`/api/v1/comments/my?page=0&size=10`)
+          if (response.data && response.data.success) {
+            setMyComments(response.data.data?.content || [])
+          }
         }
       } catch (error) {
         console.error('내 댓글 목록 조회 실패:', error)
@@ -92,17 +92,21 @@ export default function MyPage() {
   
   const handleSaveProfile = async () => {
     try {
-      await memberService.updateMyInfo({
+      const response = await axios.put('/api/v1/members/me', {
         nickname: tempNickname,
         profileImageUrl: userInfo?.profileImageUrl || null
       })
       
-      // 사용자 정보 다시 조회
-      const updatedInfo = await memberService.getMyInfo()
-      setUserInfo(updatedInfo)
-      
-      toast.success('프로필이 수정되었습니다.')
-      setShowEditModal(false)
+      if (response.data && response.data.success) {
+        // 사용자 정보 다시 조회
+        const updatedResponse = await axios.get('/api/v1/members/me')
+        if (updatedResponse.data && updatedResponse.data.success) {
+          setUserInfo(updatedResponse.data.data)
+        }
+        
+        toast.success('프로필이 수정되었습니다.')
+        setShowEditModal(false)
+      }
     } catch (error) {
       console.error('프로필 수정 실패:', error)
       toast.error('프로필 수정에 실패했습니다.')
@@ -142,18 +146,6 @@ export default function MyPage() {
     setShowDeleteModal(false)
   }
   
-  // 알림 설정 토글 함수
-  const toggleNotification = (type) => {
-    setNotificationSettings(prev => {
-      const newSettings = {
-        ...prev,
-        [type]: !prev[type]
-      }
-      // localStorage에 저장
-      localStorage.setItem('notification-settings', JSON.stringify(newSettings))
-      return newSettings
-    })
-  }
 
   return (
     <Wrap>
@@ -203,7 +195,7 @@ export default function MyPage() {
             </AlertInfo>
             <ToggleSwitch 
               $active={notificationSettings.emotionRecord} 
-              onClick={() => toggleNotification('emotionRecord')}
+              onClick={() => toggleNotificationSetting('emotionRecord')}
             />
           </AlertItem>
           <AlertItem>
@@ -213,7 +205,7 @@ export default function MyPage() {
             </AlertInfo>
             <ToggleSwitch 
               $active={notificationSettings.favoriteActivity} 
-              onClick={() => toggleNotification('favoriteActivity')}
+              onClick={() => toggleNotificationSetting('favoriteActivity')}
             />
           </AlertItem>
         </AlertList>

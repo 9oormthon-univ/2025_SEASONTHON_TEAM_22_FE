@@ -48,23 +48,8 @@ export default function PostDetail() {
         } catch (apiError) {
           console.warn('API에서 게시글 로드 실패, 로컬 스토리지에서 찾기:', apiError.message)
           
-          // API 실패 시 로컬 스토리지에서 찾기
-          try {
-            const raw = localStorage.getItem('posts')
-            if (raw) {
-              const found = JSON.parse(raw).find((p) => String(p.id) === String(id))
-              if (found) {
-                setPost(found)
-              } else {
-                setError('게시글을 찾을 수 없습니다.')
-              }
-            } else {
-              setError('게시글을 찾을 수 없습니다.')
-            }
-          } catch (localError) {
-            console.error('로컬 스토리지 읽기 실패:', localError)
-            setError('게시글을 불러오는데 실패했습니다.')
-          }
+          // 로컬스토리지 사용 제거
+          setError('게시글을 찾을 수 없습니다.')
         } finally {
           setLoading(false)
         }

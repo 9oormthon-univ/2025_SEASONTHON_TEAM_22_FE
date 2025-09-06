@@ -7,7 +7,7 @@ import { useAuth } from '../contexts/AuthContext'
 import MoodCompleteModal from '../components/MoodCompleteModal'
 
 const MOOD_MAP = {
-  행복: { key: "HAPPY", emoji: "😊" },
+  행복: { key: "HAPPY", emoji: "😊" }, 
   보통: { key: "SOSO", emoji: "🙂" },
   슬픔: { key: "SAD", emoji: "😢" },
   화남: { key: "ANGER", emoji: "😠" },
@@ -91,10 +91,7 @@ export default function Home() {
         reason: journalText
       }
       
-      const raw = localStorage.getItem('moodRecords')
-      const list = raw ? JSON.parse(raw) : []
-      list.unshift(moodRecord)
-      localStorage.setItem('moodRecords', JSON.stringify(list))
+      // 로컬스토리지 사용 제거 - 감정 기록은 API를 통해 저장
       
       // 상태 초기화
       setJournalText('')

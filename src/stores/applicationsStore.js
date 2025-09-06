@@ -1,14 +1,11 @@
 import { create } from 'zustand'
-import { persist, createJSONStorage } from 'zustand/middleware'
 import { applyActivity, cancelActivity } from '../services/activityApi'
 import { toast } from 'sonner'
 
 // 개발 모드 설정 (API 서버가 없을 때 사용)
 const DEV_MODE = import.meta.env.VITE_DEV_MODE === 'true'
 
-const useApplicationsStore = create(
-  persist(
-    (set, get) => ({
+const useApplicationsStore = create((set, get) => ({
       // 신청한 활동 목록
       appliedActivities: [],
       
@@ -112,13 +109,7 @@ const useApplicationsStore = create(
       clearApplications: () => {
         set({ appliedActivities: [] })
       }
-    }),
-    {
-      name: 'applications-storage', // localStorage 키
-      storage: createJSONStorage(() => localStorage),
-      partialize: (state) => ({ appliedActivities: state.appliedActivities })
-    }
-  )
+    })
 )
 
 export default useApplicationsStore

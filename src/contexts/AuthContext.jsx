@@ -5,7 +5,6 @@ import {
   useEffect,
   useCallback,
 } from "react";
-import { authService, memberService } from "../services/memberService";
 import axios from "axios";
 
 const AuthContext = createContext();
@@ -22,18 +21,20 @@ export const AuthProvider = ({ children }) => {
   const [currentUser, setCurrentUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // 앱 로딩 시 사용자 정보 로드
+  // 앱 로딩 시 사용자 정보 확인
   const verifyUser = useCallback(async () => {
-    const userData = localStorage.getItem("currentUser");
-    if (userData) {
-      try {
-        setCurrentUser(JSON.parse(userData));
-      } catch (error) {
-        console.error("사용자 정보 로드 실패:", error);
-        localStorage.removeItem("currentUser");
+    try {
+      // axios를 사용해서 사용자 정보 확인
+      const response = await axios.get('/api/v1/members/me');
+      if (response.data && response.data.success) {
+        setCurrentUser(response.data.data);
       }
+    } catch (error) {
+      console.log('사용자 정보 확인 실패:', error);
+      setCurrentUser(null);
+    } finally {
+      setIsLoading(false);
     }
-    setIsLoading(false);
   }, []);
 
   useEffect(() => {
@@ -42,17 +43,27 @@ export const AuthProvider = ({ children }) => {
 
   // login 함수는 사용자 데이터를 받아 처리
   const login = async (userData) => {
-    localStorage.setItem("currentUser", JSON.stringify(userData));
-    setCurrentUser(userData);
+    try {
+      // axios를 사용해서 사용자 정보 재확인
+      const response = await axios.get('/api/v1/members/me');
+      if (response.data && response.data.success) {
+        setCurrentUser(response.data.data);
+      } else {
+        setCurrentUser(userData);
+      }
+    } catch (error) {
+      console.log('로그인 후 사용자 정보 확인 실패, 전달받은 데이터 사용:', error);
+      setCurrentUser(userData);
+    }
   };
 
   const logout = async () => {
     try {
-      await authService.logout();
+      // axios를 사용해서 로그아웃 API 호출
+      await axios.post('/api/auth/logout');
     } catch (error) {
       console.error("로그아웃 API 호출 실패:", error);
     } finally {
-      localStorage.removeItem("currentUser");
       setCurrentUser(null);
     }
   };

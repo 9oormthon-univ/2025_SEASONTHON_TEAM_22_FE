@@ -71,14 +71,14 @@ export default function Signup() {
         loginId: formData.username,
         email: formData.email,
         password: formData.password,
-        nickname: formData.username // 기본값으로 username 사용
+        nickname: formData.username
       })
       
       // 회원가입 성공 후 자동 로그인
       login(response.member)
       
       toast.success('회원가입이 완료되었습니다!')
-      navigate('/')
+      navigate('/login')
       
     } catch (error) {
       console.error('회원가입 실패:', error)

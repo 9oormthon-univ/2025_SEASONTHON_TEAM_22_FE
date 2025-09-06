@@ -9,17 +9,7 @@ export default function ReviewDetail() {
   const { state } = useLocation()
   const [review, setReview] = useState(state?.review || null)
 
-  useEffect(() => {
-    if (!review) {
-      try {
-        const raw = localStorage.getItem('reviews')
-        if (raw) {
-          const found = JSON.parse(raw).find((r) => String(r.id) === String(id))
-          if (found) setReview(found)
-        }
-      } catch {}
-    }
-  }, [id, review])
+  // 로컬스토리지 사용 제거
 
   const renderStars = (rating) => {
     const full = Math.floor(rating || 0)

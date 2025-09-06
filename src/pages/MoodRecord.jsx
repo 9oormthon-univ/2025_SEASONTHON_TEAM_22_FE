@@ -323,14 +323,9 @@ export default function MoodRecord() {
   const currentMonthIndex = 1
   const currentMonthData = allMonthlyMoodData[currentMonthIndex]
 
-  // 로컬 저장 감정 기록과 API 데이터를 병합(저장 데이터가 상단)
-  let storedRecords = []
-  try {
-    const raw = localStorage.getItem('moodRecords')
-    storedRecords = raw ? JSON.parse(raw) : []
-  } catch {}
+  // 로컬스토리지 사용 제거 - API 데이터만 사용
   const base = monthlyRecords[currentMonthIndex] || []
-  const recentRecords = [...storedRecords, ...base].slice(0, 7)
+  const recentRecords = [...base].slice(0, 7)
   const globalMaxCount = 100
 
   const moodLabels = [

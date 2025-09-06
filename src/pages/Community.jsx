@@ -79,23 +79,9 @@ export default function Community() {
           })))
         }
       } catch (error) {
-        console.warn('API에서 데이터 로드 실패, 로컬 데이터 사용:', error.message)
+        console.log('API에서 데이터 로드 실패, 로컬 데이터 사용:', error.message)
         
-        // API 실패 시 로컬 저장소의 작성된 글/후기 반영
-        try {
-          const rawPosts = localStorage.getItem('posts')
-          if (rawPosts) {
-            const stored = JSON.parse(rawPosts)
-            const storedIds = new Set(stored.map((p) => String(p.id)))
-            setPosts([...stored, ...posts.filter((p) => !storedIds.has(String(p.id)))])
-          }
-          const rawReviews = localStorage.getItem('reviews')
-          if (rawReviews) {
-            const stored = JSON.parse(rawReviews)
-            const storedIds = new Set(stored.map((r) => String(r.id)))
-            setReviews([...stored, ...reviews.filter((r) => !storedIds.has(String(r.id)))])
-          }
-        } catch {}
+        // 로컬스토리지 사용 제거 - API 데이터만 사용
       }
     }
     
@@ -173,10 +159,6 @@ export default function Community() {
 const Wrap = styled.div`
   padding: 0 1.6rem;
 `
-
-/* tabs has own wrapper */
-
-/* tabs moved to component */
 
 const WriteRow = styled.div`
   display: flex;

@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import { ChevronLeft } from 'lucide-react'
 import { toast } from 'sonner'
 import { useAuth } from '../contexts/AuthContext'
-import { memberService } from '../services/memberService'
+import axios from 'axios'
 
 export default function Login() {
   const navigate = useNavigate()
@@ -27,17 +27,20 @@ export default function Login() {
     setIsLoading(true)
     
     try {
-      // API를 통한 로그인
-      const response = await memberService.login({
+      // axios를 사용한 로그인 API 호출
+      const response = await axios.post('/api/v1/members/login', {
         loginId: formData.username,
         password: formData.password
       })
       
       // 로그인 성공
-      login(response.data.member)
-      
-      toast.success(`${response.data.member.nickname}님, 환영합니다!`)
-      navigate('/')
+      if (response.data && response.data.success) {
+        login(response.data.data.member)
+        toast.success(`${response.data.data.member.nickname}님, 환영합니다!`)
+        navigate('/')
+      } else {
+        throw new Error('로그인 응답이 올바르지 않습니다.')
+      }
     } catch (error) {
       console.error('로그인 실패:', error)
       
