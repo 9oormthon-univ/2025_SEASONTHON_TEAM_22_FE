@@ -125,6 +125,14 @@ export const memberService = {
       data: data,
     })
   },
+
+  // 구글 로그인 (OAuth2 코드 교환)
+  loginWithGoogle: (code) => {
+    return apiRequest('/api/v1/members/login/google', {
+      method: 'POST',
+      data: { code },
+    })
+  },
 }
 
 // Auth API 서비스

@@ -12,34 +12,53 @@ export default function GoogleCallback() {
   useEffect(() => {
     const handleGoogleCallback = async () => {
       try {
-        // URL 파라미터에서 토큰 정보 추출
-        const accessToken = searchParams.get('accessToken')
-        const memberId = searchParams.get('memberId')
-        const success = searchParams.get('success')
+        // URL 파라미터에서 'code' 추출 (OAuth2 인증 코드)
+        const code = searchParams.get('code')
+        const error = searchParams.get('error')
 
-        if (success === 'true' && accessToken && memberId) {
-          // 사용자 정보를 가져오기 위해 API 호출
+        if (error) {
+          // OAuth 에러가 있는 경우
+          console.error('OAuth 에러:', error)
+          toast.error('구글 로그인에 실패했습니다.')
+          navigate('/login')
+          return
+        }
+
+        if (code) {
           try {
-            const userData = await memberService.getMyInfo()
+            // 백엔드에 코드를 보내고 토큰을 받아옴
+            const loginResponse = await memberService.loginWithGoogle(code)
             
-            // AuthContext의 login 함수가 토큰 저장과 상태 관리를 모두 처리
-            login(userData, accessToken)
-            
-            toast.success('구글 로그인에 성공했습니다!')
-            navigate('/')
+            if (loginResponse && loginResponse.data && loginResponse.data.accessToken) {
+              const { accessToken } = loginResponse.data
+              
+              // 토큰을 localStorage에 저장 (API 클라이언트가 자동으로 사용)
+              localStorage.setItem('accessToken', accessToken)
+              
+              // 사용자 정보 가져오기
+              const userData = await memberService.getMyInfo()
+              
+              // AuthContext의 login 함수로 최종 로그인 처리
+              login(userData, accessToken)
+              
+              toast.success('구글 로그인에 성공했습니다!')
+              navigate('/')
+            } else {
+              throw new Error('토큰을 받지 못했습니다.')
+            }
           } catch (error) {
-            console.error('사용자 정보 조회 실패:', error)
+            console.error('백엔드 토큰 교환 또는 사용자 정보 조회 실패:', error)
             toast.error('로그인 처리 중 오류가 발생했습니다.')
             navigate('/login')
           }
         } else {
-          // 로그인 실패
-          const error = searchParams.get('error') || '구글 로그인에 실패했습니다.'
-          toast.error(error)
+          // URL에 'code' 파라미터가 없는 경우
+          console.error('인증 코드가 없습니다.')
+          toast.error('구글 인증에 실패했습니다.')
           navigate('/login')
         }
       } catch (error) {
-        console.error('구글 로그인 콜백 처리 실패:', error)
+        console.error('구글 로그인 콜백 처리 중 알 수 없는 오류:', error)
         toast.error('로그인 처리 중 오류가 발생했습니다.')
         navigate('/login')
       }
