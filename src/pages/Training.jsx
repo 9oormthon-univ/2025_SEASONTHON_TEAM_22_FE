@@ -9,129 +9,143 @@ import { questionCardService, answerService } from '../services/memberService'
 import { toast } from 'sonner'
 
 export default function Training() {
-  const navigate = useNavigate()
-  const { currentUser } = useAuth()
-  
+  const navigate = useNavigate();
+  const { currentUser } = useAuth();
+
   // 기본 질문 데이터 (API 실패 시 사용)
   const defaultQuestions = [
-    { id: 1, cardType: '감정 이해', content: '오늘 하루 중 가장 기분 좋았던 순간이 언제인가요?', placeholder: '자유롭게 생각을 작성해보세요...' },
-    { id: 2, cardType: '자기 이해', content: '나는 언제 나답다고 느끼나요?', placeholder: '자유롭게 생각을 작성해보세요...' },
-    { id: 3, cardType: '관계 이해', content: '내 주변 사람들 중 가장 소중한 사람은 누구인가요? 그 이유는 무엇인가요?', placeholder: '자유롭게 생각을 작성해보세요...' },
-    { id: 4, cardType: '목표 설정', content: '내가 이루고 싶은 작은 목표가 있다면 무엇인가요?', placeholder: '자유롭게 생각을 작성해보세요...' },
-    { id: 5, cardType: '감사 표현', content: '오늘 감사했던 일이나 사람이 있다면 무엇인가요?', placeholder: '자유롭게 생각을 작성해보세요...' },
-    { id: 6, cardType: '미래 계획', content: '내일은 어떤 하루가 되었으면 좋겠나요?', placeholder: '자유롭게 생각을 작성해보세요...' },
-  ]
+    {
+      id: 1,
+      cardType: "감정 이해",
+      content: "오늘 하루 중 가장 기분 좋았던 순간이 언제인가요?",
+      placeholder: "자유롭게 생각을 작성해보세요...",
+    },
+    {
+      id: 2,
+      cardType: "자기 이해",
+      content: "나는 언제 나답다고 느끼나요?",
+      placeholder: "자유롭게 생각을 작성해보세요...",
+    },
+    {
+      id: 3,
+      cardType: "관계 이해",
+      content:
+        "내 주변 사람들 중 가장 소중한 사람은 누구인가요? 그 이유는 무엇인가요?",
+      placeholder: "자유롭게 생각을 작성해보세요...",
+    },
+    {
+      id: 4,
+      cardType: "목표 설정",
+      content: "내가 이루고 싶은 작은 목표가 있다면 무엇인가요?",
+      placeholder: "자유롭게 생각을 작성해보세요...",
+    },
+    {
+      id: 5,
+      cardType: "감사 표현",
+      content: "오늘 감사했던 일이나 사람이 있다면 무엇인가요?",
+      placeholder: "자유롭게 생각을 작성해보세요...",
+    },
+    {
+      id: 6,
+      cardType: "미래 계획",
+      content: "내일은 어떤 하루가 되었으면 좋겠나요?",
+      placeholder: "자유롭게 생각을 작성해보세요...",
+    },
+  ];
 
-  const [questions, setQuestions] = useState(defaultQuestions)
-  const [currentQuestionId, setCurrentQuestionId] = useState(1)
-  const [idx, setIdx] = useState(0)
-  const [answers, setAnswers] = useState({})
-  const [isLoading, setIsLoading] = useState(false)
+  const [questions, setQuestions] = useState(defaultQuestions);
+  // --- 1. idx 상태를 제거하고 currentQuestionId를 유일한 상태 기준으로 사용 ---
+  const [currentQuestionId, setCurrentQuestionId] = useState(
+    defaultQuestions[0].id
+  );
+  const [answers, setAnswers] = useState({});
+  const [isLoading, setIsLoading] = useState(false);
 
-  const current = questions[idx]
-  const total = questions.length
-  const answeredCount = Object.keys(answers).filter(k => (answers[k] || '').trim().length > 0).length
-  
+  // --- 2. id를 기준으로 현재 질문(current)과 순서(currentIndex)를 동적으로 계산 ---
+  const currentIndex = questions.findIndex((q) => q.id === currentQuestionId);
+  const current = questions[currentIndex];
+  const total = questions.length;
+  const answeredCount = Object.keys(answers).filter(
+    (k) => (answers[k] || "").trim().length > 0
+  ).length;
+
   // 모든 질문이 완료되었는지 확인
-  const allQuestionsAnswered = questions.every(question => 
-    answers[question.id]?.trim().length > 0
-  )
-  const isCompleted = allQuestionsAnswered && answeredCount === total
+  const allQuestionsAnswered = questions.every(
+    (question) => answers[question.id]?.trim().length > 0
+  );
+  const isCompleted = allQuestionsAnswered && answeredCount === total;
 
+  // --- 3. 핸들러 로직을 idx 대신 currentIndex 기준으로 변경 ---
   // 이전 질문 카드 조회
-  const handlePreviousQuestion = async () => {
-    if (idx === 0) return
-    
-    try {
-      setIsLoading(true)
-      const previousCard = await questionCardService.getPrevious(currentQuestionId)
-      setCurrentQuestionId(previousCard.id)
-      setQuestions(prev => {
-        const newQuestions = [...prev]
-        newQuestions[idx - 1] = {
-          id: previousCard.id,
-          cardType: previousCard.cardType,
-          content: previousCard.content,
-          placeholder: '자유롭게 생각을 작성해보세요...'
-        }
-        return newQuestions
-      })
-      setIdx(idx - 1)
-    } catch (error) {
-      console.error('이전 질문 조회 실패:', error)
-      // API 실패 시 기본 동작
-      setIdx(idx - 1)
-    } finally {
-      setIsLoading(false)
-    }
-  }
+  const handlePreviousQuestion = () => {
+    if (currentIndex <= 0) return;
+    const previousQuestionId = questions[currentIndex - 1].id;
+    setCurrentQuestionId(previousQuestionId);
+    // API 호출 로직은 필요 시 유지할 수 있으나, 현재는 ID 기반 네비게이션에 집중
+  };
 
   // 다음 질문 카드 조회
-  const handleNextQuestion = async () => {
-    if (idx === total - 1) return
-    
-    try {
-      setIsLoading(true)
-      const nextCard = await questionCardService.getNext(currentQuestionId)
-      setCurrentQuestionId(nextCard.id)
-      setQuestions(prev => {
-        const newQuestions = [...prev]
-        newQuestions[idx] = {
-          id: nextCard.id,
-          cardType: nextCard.cardType,
-          content: nextCard.content,
-          placeholder: '자유롭게 생각을 작성해보세요...'
-        }
-        return newQuestions
-      })
-      setIdx(idx + 1)
-    } catch (error) {
-      console.error('다음 질문 조회 실패:', error)
-      // API 실패 시 기본 동작
-      setIdx(idx + 1)
-    } finally {
-      setIsLoading(false)
-    }
-  }
+  const handleNextQuestion = () => {
+    if (currentIndex >= total - 1) return;
+    const nextQuestionId = questions[currentIndex + 1].id;
+    setCurrentQuestionId(nextQuestionId);
+    // API 호출 로직은 필요 시 유지할 수 있으나, 현재는 ID 기반 네비게이션에 집중
+  };
 
   // 답변 저장
   const handleSaveAnswer = async () => {
-    if (!currentUser?.id || !answers[current.id]?.trim()) return
-    
+    // current가 존재하지 않는 경우를 방어
+    if (!current || !currentUser?.id || !answers[current.id]?.trim()) return;
+
     try {
-      await answerService.createAnswer(currentUser.id, current.id, answers[current.id])
-      toast.success('답변이 저장되었습니다.')
+      await answerService.createAnswer(
+        currentUser.id,
+        current.id,
+        answers[current.id]
+      );
+      toast.success("답변이 저장되었습니다.");
     } catch (error) {
-      console.error('답변 저장 실패:', error)
-      toast.error('답변 저장에 실패했습니다.')
+      console.error("답변 저장 실패:", error);
+      toast.error("답변 저장에 실패했습니다.");
     }
-  }
+  };
 
   const handleComplete = () => {
     // 완료 후 데이터 초기화하고 홈으로 이동
-    setAnswers({})
-    setIdx(0)
-    navigate('/')
-  }
+    setAnswers({});
+    // 첫 번째 질문으로 상태 초기화
+    setCurrentQuestionId(defaultQuestions[0].id);
+    setQuestions(defaultQuestions);
+    navigate("/");
+  };
 
   const handleTabClick = (tabLabel) => {
-    if (tabLabel === '홈') {
-      navigate('/')
+    if (tabLabel === "홈") {
+      navigate("/");
     } else {
-      navigate(`/${tabLabel === '활동 추천' ? 'recommend' : 
-                      tabLabel === '커뮤니티' ? 'community' :
-                      tabLabel === '마음 훈련' ? 'training' :
-                      tabLabel === '내 마음' ? 'mypage' : ''}`)
+      navigate(
+        `/${
+          tabLabel === "활동 추천"
+            ? "recommend"
+            : tabLabel === "커뮤니티"
+            ? "community"
+            : tabLabel === "마음 훈련"
+            ? "training"
+            : tabLabel === "내 마음"
+            ? "mypage"
+            : ""
+        }`
+      );
     }
-  }
+  };
 
   const navItems = [
-    { label: '홈', active: false, icon: Home },
-    { label: '활동 추천', active: false, icon: Star },
-    { label: '커뮤니티', active: false, icon: Users },
-    { label: '마음 훈련', active: true, icon: BookOpen },
-    { label: '내 마음', active: false, icon: Heart }
-  ]
+    { label: "홈", active: false, icon: Home },
+    { label: "활동 추천", active: false, icon: Star },
+    { label: "커뮤니티", active: false, icon: Users },
+    { label: "마음 훈련", active: true, icon: BookOpen },
+    { label: "내 마음", active: false, icon: Heart },
+  ];
 
   // 완료 화면
   if (isCompleted) {
@@ -162,12 +176,11 @@ export default function Training() {
             </SuccessAnimation>
 
             {/* Completion Message */}
-            <CompletionTitle>
-              마음 훈련 성공!
-            </CompletionTitle>
+            <CompletionTitle>마음 훈련 성공!</CompletionTitle>
 
             <CompletionMessage>
-              6개의 질문에 모두 답하며<br/>
+              6개의 질문에 모두 답하며
+              <br />
               소중한 마음 여행을 완성했어요! 🚀
             </CompletionMessage>
 
@@ -197,14 +210,10 @@ export default function Training() {
             </MotivationalCard>
 
             {/* Home Button */}
-            <HomeButton onClick={handleComplete}>
-              홈으로 돌아가기
-            </HomeButton>
+            <HomeButton onClick={handleComplete}>홈으로 돌아가기</HomeButton>
 
             {/* Small decorative text */}
-            <DecorativeText>
-              내일도 함께 마음을 돌봐요 🌱
-            </DecorativeText>
+            <DecorativeText>내일도 함께 마음을 돌봐요 🌱</DecorativeText>
           </CompletionWrapper>
         </CompletionContent>
 
@@ -241,10 +250,12 @@ export default function Training() {
       <Card>
         <RowBetween>
           <SmallMuted>진행률</SmallMuted>
-          <SmallStrong>{answeredCount}/{total}</SmallStrong>
+          <SmallStrong>
+            {answeredCount}/{total}
+          </SmallStrong>
         </RowBetween>
         <Progress>
-          <ProgressBar width={`${(answeredCount/total)*100}%`} />
+          <ProgressBar width={`${(answeredCount / total) * 100}%`} />
         </Progress>
       </Card>
 
@@ -254,17 +265,30 @@ export default function Training() {
       </QuestionCard>
 
       <NavRow>
-        <NavBtn disabled={idx===0 || isLoading} onClick={handlePreviousQuestion}>
+        <NavBtn
+          disabled={idx === 0 || isLoading}
+          onClick={handlePreviousQuestion}
+        >
           <IoChevronBack size={16} />
           <span>이전</span>
         </NavBtn>
         <Dots>
-          {questions.map((q, i)=>{
-            const done = (answers[q.id]||'').trim().length>0
-            return <Dot key={q.id} $active={i===idx} $done={done} onClick={()=>setIdx(i)} />
+          {questions.map((q, i) => {
+            const done = (answers[q.id] || "").trim().length > 0;
+            return (
+              <Dot
+                key={q.id}
+                $active={i === idx}
+                $done={done}
+                onClick={() => setIdx(i)}
+              />
+            );
           })}
         </Dots>
-        <NavBtn disabled={idx===total-1 || isLoading} onClick={handleNextQuestion}>
+        <NavBtn
+          disabled={idx === total - 1 || isLoading}
+          onClick={handleNextQuestion}
+        >
           <span>다음</span>
           <IoChevronForward size={16} />
         </NavBtn>
@@ -274,28 +298,37 @@ export default function Training() {
         <SectionTitle>내 생각 적어보기</SectionTitle>
         <Textarea
           placeholder={current.placeholder}
-          value={answers[current.id]||''}
-          onChange={(e)=> setAnswers(prev=>({...prev, [current.id]: e.target.value}))}
+          value={answers[current.id] || ""}
+          onChange={(e) =>
+            setAnswers((prev) => ({ ...prev, [current.id]: e.target.value }))
+          }
         />
-        <RightMuted>{(answers[current.id]||'').length}/500</RightMuted>
+        <RightMuted>{(answers[current.id] || "").length}/500</RightMuted>
 
         <Buttons>
-          <GhostButton onClick={()=>{ setIdx(0); setAnswers({}) }}>그만하기</GhostButton>
-          <PrimaryButton 
-            disabled={!((answers[current.id]||'').trim()) || isLoading} 
+          <GhostButton
+            onClick={() => {
+              setIdx(0);
+              setAnswers({});
+            }}
+          >
+            그만하기
+          </GhostButton>
+          <PrimaryButton
+            disabled={!(answers[current.id] || "").trim() || isLoading}
             onClick={async () => {
-              await handleSaveAnswer()
+              await handleSaveAnswer();
               if (idx < total - 1) {
-                await handleNextQuestion()
+                await handleNextQuestion();
               }
             }}
           >
-            {isLoading ? '저장 중...' : '저장하기'}
+            {isLoading ? "저장 중..." : "저장하기"}
           </PrimaryButton>
         </Buttons>
       </AnswerCard>
     </Wrap>
-  )
+  );
 }
 
 const Wrap = styled.div`
