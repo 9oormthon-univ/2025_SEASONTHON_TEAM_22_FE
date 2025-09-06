@@ -6,6 +6,14 @@ import { createEmotion } from '../services/emotionApi'
 import { useAuth } from '../contexts/AuthContext'
 import MoodCompleteModal from '../components/MoodCompleteModal'
 
+const MOOD_MAP = {
+  행복: { key: "HAPPY", emoji: "😊" },
+  보통: { key: "NEUTRAL", emoji: "🙂" },
+  슬픔: { key: "SAD", emoji: "😢" },
+  화남: { key: "ANGRY", emoji: "😠" },
+  걱정: { key: "WORRY", emoji: "😟" },
+};
+
 export default function Home() {
   const navigate = useNavigate()
   const { currentUser, logout } = useAuth()
@@ -30,13 +38,13 @@ export default function Home() {
   // 한국어 라벨을 영어 키로 변환
   const getMoodKey = (koreanLabel) => {
     const moodMap = {
-      '행복': 'happy',
-      '보통': 'neutral', 
-      '슬픔': 'sad',
-      '화남': 'angry',
-      '걱정': 'worried'
+      '행복': 'HAPPY',
+      '보통': 'SOSO', 
+      '슬픔': 'SAD',
+      '화남': 'ANGRY',
+      '걱정': 'WORRY'
     }
-    return moodMap[koreanLabel] || 'happy'
+    return moodMap[koreanLabel] || "null";
   }
 
   const handleLogout = () => {
@@ -64,27 +72,14 @@ export default function Home() {
     
     setIsSaving(true)
     
-    try {
-      // 감정 타입 매핑
-      const moodMapping = {
-        '행복': 'happy',
-        '보통': 'neutral', 
-        '슬픔': 'sad',
-        '화남': 'angry',
-        '걱정': 'worried'
-      }
-      
+    try {      
       const emotionData = {
-        mood: moodMapping[selectedMood] || 'neutral',
+        mood: MOOD_MAP[selectedMood]?.key || 'null',
         note: journalText.trim()
       }
       
-      // API로 감정 기록 저장 (memberId는 기본값 1 사용)
-      try {
-        await createEmotion(emotionData, 1)
-      } catch (apiError) {
-        console.warn('API 저장 실패:', apiError.message)
-      }
+      const memberId = currentUser.id; // currentUser 객체 구조에 맞게 수정 필요
+      await createEmotion(emotionData, memberId);
       
       // 로컬 스토리지에도 백업 저장
       const now = new Date()
